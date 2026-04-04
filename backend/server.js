@@ -1,8 +1,19 @@
-const express = require("express");
+const express = require('express');
+const cors = require('cors');
+const fileRoutes = require('./routes/fileRoutes');
+
 const app = express();
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type"],
+  exposedHeaders: ["Content-Disposition"]
+}));
+app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("SafePrint backend running 🚀");
+app.use('/api/files', fileRoutes);
+
+const PORT = 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });
-
-app.listen(5000, () => console.log("Server running on port 5000"));
