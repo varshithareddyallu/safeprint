@@ -3,7 +3,9 @@ const multer = require('multer');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 const mime = require('mime-types');
+const ptp = require('pdf-to-printer');
 
 const router = express.Router();
 
@@ -44,7 +46,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 
 // Stream & Decrypt File for Viewing
 router.get('/download/:code', (req, res) => {
-  const code = req.params.code;
+  const code = req.params.code.toLowerCase();
   const fileData = fileStore[code];
 
   if (!fileData) {
@@ -90,16 +92,61 @@ router.get('/download/:code', (req, res) => {
   });
 
   readStream.pipe(decipher).pipe(res);
+});
 
-  // Delete file and in-memory record after stream is finished
-  res.on('finish', () => {
-    console.log(`Stream finished for '${fileData.originalName}'. Deleting file and record.`);
-    fs.unlink(filepath, (unlinkErr) => {
-      if (unlinkErr) console.error(`Failed to delete file ${filepath}:`, unlinkErr);
-      // Always remove the in-memory record to prevent re-use of the code
-      delete fileStore[code];
-    });
-  });
+
+// Direct Print — PDF never sent to browser
+router.post('/print/:code', async (req, res) => {
+  const code = req.params.code.toLowerCase();
+  const fileData = fileStore[code];
+
+  if (!fileData) {
+    return res.status(404).json({ error: 'Invalid code. File may have already been printed or deleted.' });
+  }
+
+  const filepath = path.join(uploadDir, fileData.diskFilename);
+
+  if (!fs.existsSync(filepath)) {
+    delete fileStore[code];
+    return res.status(404).json({ error: 'File not found on server.' });
+  }
+
+  // Decrypt in memory
+  const encrypted = fs.readFileSync(filepath);
+  const decipher = crypto.createDecipheriv(
+    'aes-256-cbc',
+    Buffer.from(fileData.key, 'hex'),
+    Buffer.from(fileData.iv, 'hex')
+  );
+  const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
+
+  // Write to a temp file so pdf-to-printer can access it
+  const ext = path.extname(fileData.originalName) || '.pdf';
+  const tmpFile = path.join(os.tmpdir(), `safeprint_${code}${ext}`);
+  fs.writeFileSync(tmpFile, decrypted);
+
+  try {
+    // Check if any printers are available
+    const printers = await ptp.getPrinters();
+    if (!printers || printers.length === 0) {
+      if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
+      return res.status(503).json({ error: 'No printer connected. Please connect a printer and try again.' });
+    }
+
+    // Send to default printer
+    await ptp.print(tmpFile);
+
+    // DELETE original and record ONLY on success/handoff
+    if (fs.existsSync(filepath)) fs.unlinkSync(filepath);
+    if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
+    delete fileStore[code];
+
+    return res.json({ success: true, message: 'Document sent to printer successfully and deleted from server.' });
+  } catch (err) {
+    console.error('Print error:', err);
+    if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
+    return res.status(503).json({ error: 'Failed to send to printer. Make sure a printer is connected and set as default.' });
+  }
 });
 
 module.exports = router;

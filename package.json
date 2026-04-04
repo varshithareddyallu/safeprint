@@ -1,8 +1,12 @@
 {
-  "dependencies": {
-    "framer-motion": "^12.34.0",
-    "lucide-react": "^0.563.0",
-    "react-router-dom": "^7.13.0",
-    "react-scripts": "^5.0.1"
+  "name": "safeprint-root",
+  "version": "1.0.0",
+  "scripts": {
+    "server": "cd backend && npm run dev",
+    "client": "cd frontend && npm start",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
   }
 }
