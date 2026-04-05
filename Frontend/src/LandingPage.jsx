@@ -80,7 +80,7 @@ const SecurePrinter3D = () => {
             }}
           >
             {/* Top panel details */}
-            <div className="absolute top-3 left-4 right-4 h-2 rounded-full bg-slate-800 overflow-hidden">
+            <div className="absolute top-3 left-4 right-4 h-2 rounded-full bg-slate-100 overflow-hidden">
               <motion.div
                 className="h-full rounded-full"
                 style={{ background: 'linear-gradient(90deg, #10b981, #06b6d4, #10b981)' }}
@@ -99,7 +99,7 @@ const SecurePrinter3D = () => {
             </div>
 
             {/* Paper input slot (top dark slit) */}
-            <div className="absolute top-10 left-6 right-6 h-[3px] bg-slate-950 rounded-full shadow-inner" />
+            <div className="absolute top-10 left-6 right-6 h-[3px] bg-slate-50 rounded-full shadow-inner" />
 
             {/* Display screen */}
             <div className="absolute top-16 left-1/2 -translate-x-1/2 w-[100px] h-[40px] rounded-lg border border-slate-600/40 overflow-hidden"
@@ -146,7 +146,7 @@ const SecurePrinter3D = () => {
                  boxShadow: '0 15px 40px rgba(0,0,0,0.4)',
                }}>
             {/* Paper output slot */}
-            <div className="absolute top-0 left-8 right-8 h-[3px] bg-slate-950 rounded-full" />
+            <div className="absolute top-0 left-8 right-8 h-[3px] bg-slate-50 rounded-full" />
 
             {/* === ANIMATED PAPER coming out === */}
             <motion.div
@@ -421,10 +421,10 @@ const AnimatedCounter = ({ target, suffix = '', label }) => {
 
   return (
     <div ref={ref} className="text-center">
-      <div className="text-4xl md:text-5xl font-extrabold text-white mb-2">
+      <div className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-2">
         {count}{suffix}
       </div>
-      <div className="text-slate-400 text-sm font-medium">{label}</div>
+      <div className="text-slate-600 text-sm font-medium">{label}</div>
     </div>
   );
 };
@@ -450,7 +450,7 @@ const LandingPage = () => {
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-emerald-500/30 overflow-x-hidden">
+    <div ref={containerRef} className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-emerald-500/30 overflow-x-hidden">
 
       {/* Scroll Progress Bar */}
       <motion.div
@@ -465,7 +465,7 @@ const LandingPage = () => {
         initial={{ y: -80 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="fixed top-0 w-full z-50 bg-slate-950/70 backdrop-blur-xl border-b border-white/5"
+        className="fixed top-0 w-full z-50 bg-slate-50/70 backdrop-blur-xl border-b border-slate-200"
       >
         <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
           <div className="flex items-center gap-3">
@@ -476,16 +476,16 @@ const LandingPage = () => {
             >
               <Shield className="text-emerald-400" size={22} />
             </motion.div>
-            <span className="text-xl font-bold tracking-tight text-white">
+            <span className="text-xl font-bold tracking-tight text-slate-900">
               SafePrint<span className="text-emerald-500">.</span>
             </span>
           </div>
-          <div className="hidden md:flex gap-8 text-sm font-medium text-slate-400">
+          <div className="hidden md:flex gap-8 text-sm font-medium text-slate-600">
             {['Solutions', 'How It Works', 'Security', 'Stats'].map((item, i) => (
               <motion.a
                 key={item}
                 href={`#${['features', 'workflow', 'security', 'stats'][i]}`}
-                className="hover:text-white transition-colors relative group"
+                className="hover:text-slate-900 transition-colors relative group"
                 whileHover={{ y: -1 }}
               >
                 {item}
@@ -535,7 +535,7 @@ const LandingPage = () => {
           >
             {/* Status Badge */}
             <motion.div
-              className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-emerald-950/40 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-widest mb-8"
+              className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-emerald-100 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-widest mb-8"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3, duration: 0.6 }}
@@ -548,7 +548,7 @@ const LandingPage = () => {
             </motion.div>
 
             <motion.h1
-              className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-7 leading-[1.05]"
+              className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-slate-900 mb-7 leading-[1.05]"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 1 }}
@@ -561,7 +561,7 @@ const LandingPage = () => {
             </motion.h1>
 
             <motion.p
-              className="text-lg md:text-xl text-slate-400 max-w-xl mx-auto lg:mx-0 mb-10 leading-relaxed"
+              className="text-lg md:text-xl text-slate-600 max-w-xl mx-auto lg:mx-0 mb-10 leading-relaxed"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5, duration: 0.8 }}
@@ -593,7 +593,7 @@ const LandingPage = () => {
               <div className="flex flex-col sm:flex-row gap-3 flex-1 lg:flex-none">
                 <motion.button
                   onClick={() => navigate('/nearby')}
-                  className="flex-1 lg:px-6 py-4 rounded-2xl font-bold text-sm text-white border border-slate-700/80 bg-white/5 hover:bg-white/10 hover:border-emerald-500 transition-all backdrop-blur-sm flex items-center justify-center gap-2 whitespace-nowrap"
+                  className="flex-1 lg:px-6 py-4 rounded-2xl font-bold text-sm text-slate-900 border border-slate-300/80 bg-white/5 hover:bg-white/10 hover:border-emerald-500 transition-all backdrop-blur-sm flex items-center justify-center gap-2 whitespace-nowrap"
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -602,7 +602,7 @@ const LandingPage = () => {
                 </motion.button>
                 <motion.button
                   onClick={() => navigate('/business')}
-                  className="flex-1 lg:px-6 py-4 rounded-2xl font-bold text-sm text-slate-300 border border-slate-700/80 bg-white/5 hover:bg-white/10 hover:border-cyan-500 transition-all backdrop-blur-sm flex items-center justify-center gap-2 whitespace-nowrap"
+                  className="flex-1 lg:px-6 py-4 rounded-2xl font-bold text-sm text-slate-700 border border-slate-300/80 bg-white/5 hover:bg-white/10 hover:border-cyan-500 transition-all backdrop-blur-sm flex items-center justify-center gap-2 whitespace-nowrap"
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -629,7 +629,7 @@ const LandingPage = () => {
       <WorkflowSection />
 
       {/* ===== TARGET SECTORS — 3D Tilt Cards ===== */}
-      <section id="features" className="py-16 bg-slate-900/20 border-y border-white/5 relative">
+      <section id="features" className="py-16 bg-white/20 border-y border-slate-200 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-emerald-500/3 to-transparent pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
@@ -638,8 +638,8 @@ const LandingPage = () => {
               <motion.span className="inline-block px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-widest mb-5">
                 Use Cases
               </motion.span>
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-5">Real-World Solutions</h2>
-              <p className="text-slate-400 text-lg max-w-xl mx-auto">
+              <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-5">Real-World Solutions</h2>
+              <p className="text-slate-600 text-lg max-w-xl mx-auto">
                 Solving the privacy gaps in our daily digital interactions.
               </p>
             </div>
@@ -687,18 +687,18 @@ const LandingPage = () => {
               <ScrollSection key={i} delay={i * 0.12}>
                 <TiltCard
                   glowColor={card.glowColor}
-                  className={`relative bg-slate-900/60 backdrop-blur-md p-7 rounded-2xl border ${card.borderColor} transition-all duration-500 group cursor-default h-full`}
+                  className={`relative bg-white/60 backdrop-blur-md p-7 rounded-2xl border ${card.borderColor} transition-all duration-500 group cursor-default h-full`}
                 >
                   <div className="flex justify-between items-start mb-5">
-                    <div className={`p-3 ${card.iconBg} rounded-xl border border-white/5 group-hover:scale-110 transition-transform duration-300`}>
+                    <div className={`p-3 ${card.iconBg} rounded-xl border border-slate-200 group-hover:scale-110 transition-transform duration-300`}>
                       {card.icon}
                     </div>
-                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white/5 text-slate-300 border border-white/5 uppercase tracking-wider">
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white/5 text-slate-700 border border-slate-200 uppercase tracking-wider">
                       {card.badge}
                     </span>
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-3">{card.title}</h3>
-                  <p className="text-slate-400 text-sm leading-relaxed border-t border-white/5 pt-4">
+                  <h3 className="text-xl font-bold text-slate-900 mb-3">{card.title}</h3>
+                  <p className="text-slate-600 text-sm leading-relaxed border-t border-slate-200 pt-4">
                     {card.desc}
                   </p>
                 </TiltCard>
@@ -729,19 +729,19 @@ const LandingPage = () => {
           <ScrollSection>
             <div>
               <motion.div
-                className="inline-flex items-center justify-center p-4 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50 mb-8 shadow-lg"
+                className="inline-flex items-center justify-center p-4 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-300/50 mb-8 shadow-lg"
                 whileHover={{ rotate: 5, scale: 1.05 }}
               >
                 <Lock className="text-emerald-400" size={30} />
               </motion.div>
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-7 leading-tight">
+              <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-7 leading-tight">
                 The{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-400">
                   "Burn-After-Reading"
                 </span>{' '}
                 Protocol
               </h2>
-              <p className="text-slate-400 text-lg mb-10 leading-relaxed">
+              <p className="text-slate-600 text-lg mb-10 leading-relaxed">
                 Traditional cloud storage keeps your files forever. SafePrint is designed to destroy them.
                 Our architecture ensures data cannot be recovered once the transaction is complete.
               </p>
@@ -754,15 +754,15 @@ const LandingPage = () => {
                 ].map((feature, i) => (
                   <ScrollSection key={i} delay={i * 0.15}>
                     <motion.div
-                      className="flex gap-5 p-4 rounded-xl hover:bg-slate-900/50 transition-colors duration-300 group cursor-default"
+                      className="flex gap-5 p-4 rounded-xl hover:bg-white/50 transition-colors duration-300 group cursor-default"
                       whileHover={{ x: 5 }}
                     >
                       <div className="mt-0.5 p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20 text-emerald-400 group-hover:scale-110 transition-transform flex-shrink-0">
                         {feature.icon}
                       </div>
                       <div>
-                        <h4 className="text-white font-bold text-lg mb-1">{feature.title}</h4>
-                        <p className="text-slate-400 text-sm leading-relaxed">{feature.desc}</p>
+                        <h4 className="text-slate-900 font-bold text-lg mb-1">{feature.title}</h4>
+                        <p className="text-slate-600 text-sm leading-relaxed">{feature.desc}</p>
                       </div>
                     </motion.div>
                   </ScrollSection>
@@ -775,7 +775,7 @@ const LandingPage = () => {
           <ScrollSection delay={0.2}>
             <TiltCard
               glowColor="rgba(52,211,153,0.08)"
-              className="relative bg-slate-900 border border-slate-700/60 rounded-3xl p-8 overflow-hidden group"
+              className="relative bg-white border border-slate-300/60 rounded-3xl p-8 overflow-hidden group"
             >
               <div className="absolute inset-0 opacity-[0.03]" style={{
                 backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
@@ -790,7 +790,7 @@ const LandingPage = () => {
                   <span className="ml-3 text-xs text-slate-600 font-sans">server/handler.js</span>
                 </div>
 
-                <div className="space-y-2.5 text-slate-400">
+                <div className="space-y-2.5 text-slate-600">
                   {[
                     { content: <><span className="text-purple-400">const</span> <span className="text-blue-400">handleDownload</span> = <span className="text-yellow-400">async</span> (req, res) =&gt; {'{'}</>, delay: 0 },
                     { content: <span className="pl-5 text-slate-600">{'// 1. Stream file to client'}</span>, delay: 0.1 },
@@ -838,14 +838,14 @@ const LandingPage = () => {
               transition={{ duration: 1 }}
               style={{ perspective: '1000px' }}
             >
-              <h2 className="text-4xl md:text-6xl font-extrabold text-white mb-6">
+              <h2 className="text-4xl md:text-6xl font-extrabold text-slate-900 mb-6">
                 Ready to go{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
                   ghost mode
                 </span>
                 ?
               </h2>
-              <p className="text-slate-400 text-lg mb-10 max-w-xl mx-auto">
+              <p className="text-slate-600 text-lg mb-10 max-w-xl mx-auto">
                 Start transferring files with military-grade ephemeral security.
                 Zero registration. Zero traces.
               </p>
@@ -865,7 +865,7 @@ const LandingPage = () => {
       </section>
 
       {/* ===== FOOTER ===== */}
-      <footer className="border-t border-white/5 py-14 relative">
+      <footer className="border-t border-slate-200 py-14 relative">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-3">
             <div className="bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20">

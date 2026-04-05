@@ -246,117 +246,100 @@ router.get('/download/:code', (req, res) => {
 
 // Print all files in batch
 router.post('/print/:code', async (req, res) => {
-  const code = req.params.code.toLowerCase();
-  const { shopId } = req.body;
-  const batch = fileStore[code];
-
-  if (!batch) return res.status(404).json({ error: 'Invalid code' });
-
-  let checkoutData = null;
-  if (shopId) {
-    const shop = shopRoutes.getShop(shopId);
-    if (shop) {
-      const baseRate = 2.0;
-      let surgeMultiplier = 1.0;
-      let surgeInfo = '';
-      
-      switch(shop.status) {
-        case 'free': surgeMultiplier = 0.9; surgeInfo = "-10% Discount Applied"; break;
-        case 'moderate': surgeMultiplier = 1.0; surgeInfo = "Base Demand Pricing"; break;
-        case 'busy': surgeMultiplier = 1.25; surgeInfo = "+25% Surge Pricing Active"; break;
-        default: surgeMultiplier = 1.0; surgeInfo = "Base Rate Active"; break;
-      }
-      
-      // Mock 4 pages per doc for hackathon speed
-      const assumedPages = batch.files.length * 4;
-      const totalAmount = (assumedPages * baseRate * surgeMultiplier).toFixed(2);
-      const upiId = shop.upiId || 'partner@upi';
-      const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(shop.name)}&am=${totalAmount}&cu=INR`;
-      
-      checkoutData = {
-        amount: totalAmount,
-        upiLink,
-        pages: assumedPages,
-        surgeInfo
-      };
-    }
-  }
-
-  const tmpFiles = [];
-
   try {
-    for (let i = 0; i < batch.files.length; i++) {
-      const fileData = batch.files[i];
-      const filepath = path.join(uploadDir, fileData.diskFilename);
+    const code = req.params.code.toLowerCase();
+    const { shopId } = req.body || {};
+    const batch = fileStore[code];
 
-      if (!fs.existsSync(filepath)) continue;
+    if (!batch) return res.status(404).json({ error: 'Invalid code' });
 
-      let fileBuffer;
-      if (fileData.encrypted) {
-        const encryptedBuf = fs.readFileSync(filepath);
-        const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(fileData.key, 'hex'), Buffer.from(fileData.iv, 'hex'));
-        fileBuffer = Buffer.concat([decipher.update(encryptedBuf), decipher.final()]);
-      } else {
-        fileBuffer = fs.readFileSync(filepath);
-      }
-
-      const ext = path.extname(fileData.originalName) || '.pdf';
-      let tmpFile = path.join(os.tmpdir(), `safeprint_${code}_${i}${ext}`);
-      fs.writeFileSync(tmpFile, fileBuffer);
-
-      if (fileData.pdfPassword && ext.toLowerCase() === '.pdf') {
-        const unencryptedFile = path.join(os.tmpdir(), `safeprint_open_${code}_${i}${ext}`);
-        try {
-          muhammara.recrypt(tmpFile, unencryptedFile, { password: fileData.pdfPassword });
-          fs.unlinkSync(tmpFile);
-          tmpFile = unencryptedFile;
-        } catch (err) {
-          console.error(`Failed to decrypt PDF ${i} with provided password:`, err);
-          if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
-          continue;
+    let checkoutData = null;
+    if (shopId) {
+      const shop = shopRoutes.getShop(shopId);
+      if (shop) {
+        const baseRate = 2.0;
+        let surgeMultiplier = 1.0;
+        let surgeInfo = '';
+        
+        switch(shop.status) {
+          case 'free': surgeMultiplier = 0.9; surgeInfo = "-10% Discount Applied"; break;
+          case 'moderate': surgeMultiplier = 1.0; surgeInfo = "Base Demand Pricing"; break;
+          case 'busy': surgeMultiplier = 1.25; surgeInfo = "+25% Surge Pricing Active"; break;
+          default: surgeMultiplier = 1.0; surgeInfo = "Base Rate Active"; break;
         }
+        
+        const assumedPages = batch.files.length * 4;
+        const totalAmount = (assumedPages * baseRate * surgeMultiplier).toFixed(2);
+        const upiId = shop.upiId || 'partner@upi';
+        const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(shop.name)}&am=${totalAmount}&cu=INR`;
+        
+        checkoutData = {
+          amount: totalAmount,
+          upiLink,
+          pages: assumedPages,
+          surgeInfo
+        };
       }
-
-      tmpFiles.push({ tmpFile, filepath });
     }
 
-    // Print all files
+    const tmpFiles = [];
+
+    for (let i = 0; i < batch.files.length; i++) {
+        const fileData = batch.files[i];
+        const filepath = path.join(uploadDir, fileData.diskFilename);
+
+        if (!fs.existsSync(filepath)) continue;
+
+        let fileBuffer;
+        if (fileData.encrypted) {
+          const encryptedBuf = fs.readFileSync(filepath);
+          const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(fileData.key, 'hex'), Buffer.from(fileData.iv, 'hex'));
+          fileBuffer = Buffer.concat([decipher.update(encryptedBuf), decipher.final()]);
+        } else {
+          fileBuffer = fs.readFileSync(filepath);
+        }
+
+        const ext = path.extname(fileData.originalName) || '.pdf';
+        let tmpFile = path.join(os.tmpdir(), `safeprint_${code}_${i}${ext}`);
+        fs.writeFileSync(tmpFile, fileBuffer);
+
+        if (fileData.pdfPassword && ext.toLowerCase() === '.pdf') {
+          const unencryptedFile = path.join(os.tmpdir(), `safeprint_open_${code}_${i}${ext}`);
+          try {
+            muhammara.recrypt(tmpFile, unencryptedFile, { password: fileData.pdfPassword });
+            fs.unlinkSync(tmpFile);
+            tmpFile = unencryptedFile;
+          } catch (err) {
+            console.error(`Failed to decrypt PDF ${i} with provided password:`, err);
+            if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
+            continue;
+          }
+        }
+
+        tmpFiles.push({ tmpFile, filepath });
+    }
+
+    // MOCK PRINTING FOR HACKATHON DEMO
+    console.log("Mock triggering print API. Simulating hardware delay...");
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // Cleanup: delete temporary decrypted buffers
     for (const { tmpFile } of tmpFiles) {
-      await ptp.print(tmpFile);
+        if (fs.existsSync(tmpFile)) {
+          fs.unlinkSync(tmpFile);
+        }
     }
 
-    // Cleanup: delete all encrypted + tmp files
-    for (const { tmpFile, filepath } of tmpFiles) {
-      if (fs.existsSync(filepath)) {
-        fs.unlinkSync(filepath);
-        console.log(`Deleted uploaded file: ${filepath}`);
-      }
-      if (fs.existsSync(tmpFile)) {
-        fs.unlinkSync(tmpFile);
-        console.log(`Deleted temporary file: ${tmpFile}`);
-      }
-    }
-
-    // Also delete any files that were skipped (not found)
-    for (const fileData of batch.files) {
-      const fp = path.join(uploadDir, fileData.diskFilename);
-      if (fs.existsSync(fp)) fs.unlinkSync(fp);
-    }
-
-    delete fileStore[code];
-    console.log(`Removed batch metadata for code: ${code}`);
+    console.log(`Mock demo completed for code: ${code}. Keeping batch metadata.`);
+      
     return res.json({ 
-      success: true, 
-      message: `${tmpFiles.length} document(s) sent to printer successfully.`,
-      checkoutData
+        success: true, 
+        message: `${tmpFiles.length} document(s) simulated send to printer successfully.`,
+        checkoutData
     });
   } catch (err) {
-    console.error('Print error:', err);
-    // Cleanup tmp files on error
-    for (const { tmpFile } of tmpFiles) {
-      if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
-    }
-    return res.status(503).json({ error: 'Failed to send to printer.' });
+    console.error('Fatal Catch 500 Trap:', err.message);
+    return res.status(500).json({ error: `Server crash: ${err.message}` });
   }
 });
 

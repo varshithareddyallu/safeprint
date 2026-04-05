@@ -75,13 +75,13 @@ const ShopDashboard = () => {
 
   // Pricing Multiplier Logic
   const getPricingMultiplier = () => {
-    if (!isSurgePricingEnabled || !shop) return { text: 'Base Rate Active', color: 'text-slate-400' };
+    if (!isSurgePricingEnabled || !shop) return { text: 'Base Rate Active', color: 'text-slate-600' };
     switch(shop.status) {
       case 'free': return { text: '10% Discount Applied (Attracting Users)', color: 'text-green-400' };
       case 'moderate': return { text: 'Base Demand Pricing', color: 'text-blue-400' };
       case 'busy': return { text: '+15% Surge Pricing Active (High Load)', color: 'text-purple-400' };
       case 'closed': return { text: 'Pricing Frozen', color: 'text-slate-500' };
-      default: return { text: 'Base Rate Active', color: 'text-slate-400' };
+      default: return { text: 'Base Rate Active', color: 'text-slate-600' };
     }
   };
 
@@ -98,23 +98,23 @@ const ShopDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 font-sans text-slate-200 selection:bg-emerald-500/30 pb-20">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 selection:bg-emerald-500/30 pb-20">
       {/* Navbar */}
-      <nav className="border-b border-white/5 bg-slate-900/50 backdrop-blur-xl sticky top-0 z-40">
+      <nav className="border-b border-slate-200 bg-white/50 backdrop-blur-xl sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Store className="text-emerald-500 w-6 h-6" />
-            <span className="font-bold text-white text-xl">{shop.name}</span>
+            <span className="font-bold text-slate-900 text-xl">{shop.name}</span>
           </div>
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
-              <span className="font-medium text-slate-400 tracking-widest text-xs">STATUS:</span>
-              <div className="flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700">
+              <span className="font-medium text-slate-600 tracking-widest text-xs">STATUS:</span>
+              <div className="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-300">
                  <div className={`w-2.5 h-2.5 rounded-full ${getStatusColor(shop.status)}`} />
-                 <span className="text-sm font-bold text-white capitalize">{shop.status}</span>
+                 <span className="text-sm font-bold text-slate-900 capitalize">{shop.status}</span>
               </div>
             </div>
-            <button onClick={() => setShop(null)} className="text-slate-400 hover:text-white"><Power size={20} /></button>
+            <button onClick={() => setShop(null)} className="text-slate-600 hover:text-slate-900"><Power size={20} /></button>
           </div>
         </div>
       </nav>
@@ -124,8 +124,8 @@ const ShopDashboard = () => {
         {/* Top Header Row */}
         <div className="flex justify-between items-end mb-8">
            <div>
-             <h1 className="text-3xl font-extrabold text-white mb-2 flex items-center gap-2">Command Center</h1>
-             <p className="text-slate-400">AI-optimized operations & live shop management.</p>
+             <h1 className="text-3xl font-extrabold text-slate-900 mb-2 flex items-center gap-2">Command Center</h1>
+             <p className="text-slate-600">AI-optimized operations & live shop management.</p>
            </div>
            <button onClick={() => navigate('/business/print')} className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-bold py-3 px-6 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.3)] transition flex items-center gap-2">
              <Printer size={18} /> Open Print Receiver
@@ -136,10 +136,10 @@ const ShopDashboard = () => {
         <div className="grid md:grid-cols-2 gap-6 mb-6">
           
           {/* AI Traffic Forecaster Feature */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 relative overflow-hidden">
              <div className="flex items-center gap-2 mb-4">
                <TrendingUp className="text-cyan-400 w-5 h-5" /> 
-               <span className="font-bold text-white tracking-wide">Predictive Traffic Forecaster</span>
+               <span className="font-bold text-slate-900 tracking-wide">Predictive Traffic Forecaster</span>
                <span className="bg-cyan-500/20 text-cyan-400 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ml-auto">ML Active</span>
              </div>
              
@@ -152,35 +152,35 @@ const ShopDashboard = () => {
                  </div>
                ))}
              </div>
-             <p className="text-sm text-slate-300">
-               <strong className="text-cyan-400">Insight:</strong> AI detects a probability of a print surge around <span className="font-bold text-white">1:00 PM</span>. Suggest activating "Busy" status soon.
+             <p className="text-sm text-slate-700">
+               <strong className="text-cyan-400">Insight:</strong> AI detects a probability of a print surge around <span className="font-bold text-slate-900">1:00 PM</span>. Suggest activating "Busy" status soon.
              </p>
           </div>
 
           {/* Automated Dynamic Pricing Feature */}
-          <div className="bg-slate-900 border border-slate-800 border-l-4 border-l-purple-500 rounded-2xl p-6 flex flex-col">
+          <div className="bg-white border border-slate-200 border-l-4 border-l-purple-500 rounded-2xl p-6 flex flex-col">
              <div className="flex items-center gap-2 mb-6">
                <Zap className="text-purple-400 w-5 h-5" /> 
-               <span className="font-bold text-white tracking-wide">Automated Dynamic Pricing</span>
+               <span className="font-bold text-slate-900 tracking-wide">Automated Dynamic Pricing</span>
              </div>
              
              <div className="flex-1">
                <div className="flex items-center justify-between mb-2">
-                 <span className="text-sm text-slate-400 font-medium tracking-wide">Surge Pricing AI</span>
+                 <span className="text-sm text-slate-600 font-medium tracking-wide">Surge Pricing AI</span>
                  <label className="relative inline-flex items-center cursor-pointer">
                    <input type="checkbox" checked={isSurgePricingEnabled} onChange={() => setIsSurgePricingEnabled(!isSurgePricingEnabled)} className="sr-only peer" />
                    <div className="w-11 h-6 bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
                  </label>
                </div>
                
-               <div className="bg-slate-950 rounded-xl p-4 mt-6 border border-slate-800">
+               <div className="bg-slate-50 rounded-xl p-4 mt-6 border border-slate-200">
                  <span className="block text-xs uppercase tracking-widest text-slate-500 font-bold mb-1">Current Modifiers</span>
                  <p className={`font-bold text-lg ${getPricingMultiplier().color}`}>
                    {getPricingMultiplier().text}
                  </p>
                </div>
              </div>
-             <p className="text-xs text-slate-400 mt-4 leading-relaxed">
+             <p className="text-xs text-slate-600 mt-4 leading-relaxed">
                When enabled, pricing automatically scales with your manual status setting to optimize shop revenue using market algorithms.
              </p>
           </div>
@@ -188,9 +188,9 @@ const ShopDashboard = () => {
 
         {/* Manual Overrides Row */}
         <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-4">
-               <Activity className="text-emerald-400" /> <span className="font-bold text-white tracking-wide">Manual Status Override</span>
+               <Activity className="text-emerald-400" /> <span className="font-bold text-slate-900 tracking-wide">Manual Status Override</span>
             </div>
             <div className="grid grid-cols-2 gap-3">
                {['free', 'moderate', 'busy', 'closed'].map(st => (
@@ -199,8 +199,8 @@ const ShopDashboard = () => {
                    onClick={() => updateStatus(st)}
                    className={`p-3 rounded-xl border text-sm font-bold capitalize transition ${
                      shop.status === st 
-                     ? 'bg-slate-800 border-emerald-500 text-white' 
-                     : 'bg-slate-900/50 border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-300'
+                     ? 'bg-slate-100 border-emerald-500 text-slate-900' 
+                     : 'bg-white/50 border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'
                    }`}
                  >
                    {st}
@@ -209,9 +209,9 @@ const ShopDashboard = () => {
             </div>
           </div>
 
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 relative overflow-hidden flex flex-col justify-center text-center items-center">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 relative overflow-hidden flex flex-col justify-center text-center items-center">
             <div className="absolute -right-4 -bottom-4 opacity-5"><BarChart3 size={150} /></div>
-            <div className="text-5xl font-extrabold text-white mb-2 z-10">124</div>
+            <div className="text-5xl font-extrabold text-slate-900 mb-2 z-10">124</div>
             <p className="text-emerald-400 text-sm font-medium z-10">Total Prints Today</p>
           </div>
         </div>
@@ -222,27 +222,27 @@ const ShopDashboard = () => {
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
         {/* Chat window logic */}
         <div className={`transition-all duration-300 transform origin-bottom-right ${isChatOpen ? 'scale-100 opacity-100 mb-4' : 'scale-0 opacity-0 h-0 w-0'}`}>
-           <div className="bg-slate-800 border border-slate-700 w-80 sm:w-96 rounded-2xl shadow-2xl flex flex-col overflow-hidden h-[450px]">
+           <div className="bg-slate-100 border border-slate-300 w-80 sm:w-96 rounded-2xl shadow-2xl flex flex-col overflow-hidden h-[450px]">
              
              {/* Chat Header */}
              <div className="bg-gradient-to-r from-emerald-600 to-teal-600 p-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-emerald-100" />
-                  <span className="font-bold text-white">SafePrint Assistant</span>
+                  <Sparkles className="w-5 h-5 text-emerald-800" />
+                  <span className="font-bold text-slate-900">SafePrint Assistant</span>
                 </div>
-                <button onClick={() => setIsChatOpen(false)} className="text-emerald-100 hover:text-white transition">
+                <button onClick={() => setIsChatOpen(false)} className="text-emerald-800 hover:text-slate-900 transition">
                   <X className="w-5 h-5" />
                 </button>
              </div>
 
              {/* Chat Body */}
-             <div className="flex-1 p-4 bg-slate-900 overflow-y-auto space-y-4 text-sm" style={{scrollbarWidth: 'thin'}}>
+             <div className="flex-1 p-4 bg-white overflow-y-auto space-y-4 text-sm" style={{scrollbarWidth: 'thin'}}>
                 {chatMessages.map((msg, i) => (
                   <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                     <div className={`p-3 rounded-2xl max-w-[85%] ${
                       msg.role === 'user' 
                       ? 'bg-emerald-500 text-slate-900 rounded-br-sm' 
-                      : 'bg-slate-700 text-white rounded-bl-sm border border-slate-600'
+                      : 'bg-slate-700 text-slate-900 rounded-bl-sm border border-slate-600'
                     }`}>
                       {msg.text}
                     </div>
@@ -252,14 +252,14 @@ const ShopDashboard = () => {
              </div>
 
              {/* Chat Input */}
-             <div className="p-3 bg-slate-800 border-t border-slate-700">
+             <div className="p-3 bg-slate-100 border-t border-slate-300">
                <form onSubmit={handleSendMessage} className="relative flex items-center">
                  <input 
                    type="text" 
                    value={chatInput}
                    onChange={e => setChatInput(e.target.value)}
                    placeholder="Ask me to analyze your traffic..." 
-                   className="w-full bg-slate-900 border border-slate-600 text-white text-sm rounded-full py-2.5 pl-4 pr-10 outline-none focus:border-emerald-500 transition"
+                   className="w-full bg-white border border-slate-600 text-slate-900 text-sm rounded-full py-2.5 pl-4 pr-10 outline-none focus:border-emerald-500 transition"
                  />
                  <button type="submit" disabled={!chatInput.trim()} className="absolute right-1 p-1.5 bg-emerald-500 text-slate-900 rounded-full hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed transition">
                    <Send className="w-4 h-4 ml-0.5 mt-0.5" />
