@@ -508,9 +508,9 @@ const LandingPage = () => {
         </div>
       </motion.nav>
 
-      {/* ===== HERO SECTION — Split Layout with 3D Printer ===== */}
+      {/* ===== HERO SECTION — Full Viewport ===== */}
       <motion.section
-        className="pt-24 pb-8 md:pb-12 px-6 max-w-7xl mx-auto relative"
+        className="min-h-screen flex items-center px-6 max-w-7xl mx-auto relative"
         style={{
           y: heroY,
           scale: heroScale,
