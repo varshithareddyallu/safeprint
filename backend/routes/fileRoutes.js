@@ -323,14 +323,18 @@ router.post('/print/:code', async (req, res) => {
     console.log("Mock triggering print API. Simulating hardware delay...");
     await new Promise(resolve => setTimeout(resolve, 1500));
 
-    // Cleanup: delete temporary decrypted buffers
-    for (const { tmpFile } of tmpFiles) {
+    // Cleanup: delete temporary decrypted buffers and original files
+    for (const { tmpFile, filepath } of tmpFiles) {
         if (fs.existsSync(tmpFile)) {
           fs.unlinkSync(tmpFile);
         }
+        if (fs.existsSync(filepath)) {
+          fs.unlinkSync(filepath);
+        }
     }
 
-    console.log(`Mock demo completed for code: ${code}. Keeping batch metadata.`);
+    delete fileStore[code];
+    console.log(`Mock demo completed for code: ${code}. Files and batch metadata deleted.`);
       
     return res.json({ 
         success: true, 
