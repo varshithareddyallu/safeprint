@@ -29,7 +29,7 @@ const FloatingParticles = () => {
             top: `${p.y}%`,
             width: p.size,
             height: p.size,
-            background: `radial-gradient(circle, rgba(52,211,153,${p.opacity}) 0%, transparent 70%)`,
+            background: `radial-gradient(circle, rgba(99,102,241,${p.opacity}) 0%, transparent 70%)`,
           }}
           animate={{
             y: [0, -80, 0],
@@ -58,7 +58,7 @@ const SecurePrinter3D = () => {
 
       {/* Ambient glow behind the printer */}
       <div className="absolute w-[350px] h-[350px] rounded-full opacity-30 blur-[80px]"
-           style={{ background: 'radial-gradient(circle, rgba(52,211,153,0.4) 0%, rgba(6,182,212,0.15) 50%, transparent 70%)' }} />
+           style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.4) 0%, rgba(129,140,248,0.15) 50%, transparent 70%)' }} />
 
       {/* Main 3D printer group */}
       <motion.div
@@ -75,7 +75,7 @@ const SecurePrinter3D = () => {
             className="relative w-[260px] h-[160px] rounded-2xl border border-slate-600/50 overflow-hidden"
             style={{
               background: 'linear-gradient(145deg, #1e293b 0%, #0f172a 50%, #1e293b 100%)',
-              boxShadow: '0 25px 60px rgba(0,0,0,0.5), 0 0 40px rgba(52,211,153,0.08), inset 0 1px 0 rgba(255,255,255,0.05)',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.5), 0 0 40px rgba(99,102,241,0.08), inset 0 1px 0 rgba(255,255,255,0.05)',
               transform: 'translateZ(40px)',
             }}
           >
@@ -83,7 +83,7 @@ const SecurePrinter3D = () => {
             <div className="absolute top-3 left-4 right-4 h-2 rounded-full bg-slate-100 overflow-hidden">
               <motion.div
                 className="h-full rounded-full"
-                style={{ background: 'linear-gradient(90deg, #10b981, #06b6d4, #10b981)' }}
+                style={{ background: 'linear-gradient(90deg, #6366f1, #818cf8, #6366f1)' }}
                 animate={{ width: ['20%', '80%', '20%'] }}
                 transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
               />
@@ -91,7 +91,7 @@ const SecurePrinter3D = () => {
 
             {/* Status LEDs */}
             <div className="absolute top-3 right-4 flex gap-1.5">
-              <motion.div className="w-2 h-2 rounded-full bg-emerald-500"
+              <motion.div className="w-2 h-2 rounded-full bg-indigo-500"
                 animate={{ opacity: [1, 0.3, 1] }}
                 transition={{ duration: 1.5, repeat: Infinity }} />
               <div className="w-2 h-2 rounded-full bg-slate-600" />
@@ -111,11 +111,11 @@ const SecurePrinter3D = () => {
                   animate={{ opacity: [1, 0.5, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
-                  <Shield size={10} className="text-emerald-400" />
-                  <span className="text-[7px] font-mono text-emerald-400 font-bold">SECURED</span>
+                  <Shield size={10} className="text-indigo-600" />
+                  <span className="text-[7px] font-mono text-indigo-600 font-bold">SECURED</span>
                 </motion.div>
                 <motion.div
-                  className="text-[6px] font-mono text-cyan-400/60 mt-0.5"
+                  className="text-[6px] font-mono text-indigo-600/60 mt-0.5"
                   animate={{ opacity: [0.4, 1, 0.4] }}
                   transition={{ duration: 1.5, repeat: Infinity, delay: 0.5 }}
                 >
@@ -123,7 +123,7 @@ const SecurePrinter3D = () => {
                 </motion.div>
               </div>
               {/* Screen glow */}
-              <div className="absolute inset-0 bg-emerald-500/5 pointer-events-none" />
+              <div className="absolute inset-0 bg-indigo-500/5 pointer-events-none" />
             </div>
 
             {/* Control buttons row */}
@@ -214,7 +214,7 @@ const SecurePrinter3D = () => {
           transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
         >
           {/* Shield orbit ring */}
-          <div className="absolute top-[-120px] left-[-120px] w-[500px] h-[500px] rounded-full border border-emerald-500/10"
+          <div className="absolute top-[-120px] left-[-120px] w-[500px] h-[500px] rounded-full border border-indigo-500/10"
                style={{ transform: 'rotateX(70deg)' }} />
         </motion.div>
 
@@ -229,16 +229,16 @@ const SecurePrinter3D = () => {
           transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
         >
           <motion.div
-            className="w-12 h-12 rounded-xl flex items-center justify-center border border-emerald-500/30"
+            className="w-12 h-12 rounded-xl flex items-center justify-center border border-indigo-500/30"
             style={{
-              background: 'linear-gradient(135deg, rgba(16,185,129,0.2), rgba(6,182,212,0.1))',
-              boxShadow: '0 0 30px rgba(52,211,153,0.3), 0 0 60px rgba(52,211,153,0.1)',
+              background: 'linear-gradient(135deg, rgba(16,185,129,0.2), rgba(129,140,248,0.1))',
+              boxShadow: '0 0 30px rgba(99,102,241,0.3), 0 0 60px rgba(99,102,241,0.1)',
               backdropFilter: 'blur(10px)',
             }}
             animate={{ rotate: [0, 360] }}
             transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
           >
-            <Shield size={20} className="text-emerald-400" />
+            <Shield size={20} className="text-indigo-600" />
           </motion.div>
         </motion.div>
 
@@ -252,16 +252,16 @@ const SecurePrinter3D = () => {
           transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
         >
           <motion.div
-            className="w-9 h-9 rounded-lg flex items-center justify-center border border-cyan-500/20"
+            className="w-9 h-9 rounded-lg flex items-center justify-center border border-indigo-500/20"
             style={{
-              background: 'linear-gradient(135deg, rgba(6,182,212,0.15), rgba(168,85,247,0.1))',
-              boxShadow: '0 0 20px rgba(6,182,212,0.2)',
+              background: 'linear-gradient(135deg, rgba(129,140,248,0.15), rgba(168,85,247,0.1))',
+              boxShadow: '0 0 20px rgba(129,140,248,0.2)',
               backdropFilter: 'blur(8px)',
             }}
             animate={{ rotate: [360, 0] }}
             transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
           >
-            <Lock size={14} className="text-cyan-400" />
+            <Lock size={14} className="text-indigo-600" />
           </motion.div>
         </motion.div>
 
@@ -269,8 +269,8 @@ const SecurePrinter3D = () => {
         <motion.div
           className="absolute left-[-20px] right-[-20px] h-[2px] pointer-events-none"
           style={{
-            background: 'linear-gradient(90deg, transparent, rgba(52,211,153,0.6), rgba(6,182,212,0.6), transparent)',
-            boxShadow: '0 0 15px rgba(52,211,153,0.4), 0 0 30px rgba(52,211,153,0.2)',
+            background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.6), rgba(129,140,248,0.6), transparent)',
+            boxShadow: '0 0 15px rgba(99,102,241,0.4), 0 0 30px rgba(99,102,241,0.2)',
           }}
           animate={{ top: ['-10%', '110%'] }}
           transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', repeatDelay: 1 }}
@@ -280,7 +280,7 @@ const SecurePrinter3D = () => {
         {[...Array(8)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 rounded-full bg-emerald-400/60"
+            className="absolute w-1 h-1 rounded-full bg-indigo-400/60"
             style={{ left: '50%', top: '50%' }}
             animate={{
               x: [0, Math.cos((i * Math.PI * 2) / 8) * 160],
@@ -301,7 +301,7 @@ const SecurePrinter3D = () => {
         {['01', '10', '11', '00', '01'].map((binary, i) => (
           <motion.span
             key={`bin-${i}`}
-            className="absolute text-[8px] font-mono text-emerald-500/30 pointer-events-none select-none"
+            className="absolute text-[8px] font-mono text-indigo-500/30 pointer-events-none select-none"
             style={{ left: '50%', top: '50%' }}
             animate={{
               x: [0, (Math.random() - 0.5) * 200],
@@ -322,7 +322,7 @@ const SecurePrinter3D = () => {
 
       {/* Ground reflection */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-[200px] h-[60px] rounded-full opacity-20 blur-[20px]"
-           style={{ background: 'radial-gradient(ellipse, rgba(52,211,153,0.4), transparent)' }} />
+           style={{ background: 'radial-gradient(ellipse, rgba(99,102,241,0.4), transparent)' }} />
     </div>
   );
 };
@@ -330,7 +330,7 @@ const SecurePrinter3D = () => {
 /* ============================================================
    3D TILT CARD — Follows mouse for depth effect
    ============================================================ */
-const TiltCard = ({ children, className = '', glowColor = 'rgba(52,211,153,0.15)' }) => {
+const TiltCard = ({ children, className = '', glowColor = 'rgba(99,102,241,0.15)' }) => {
   const cardRef = useRef(null);
   const [transform, setTransform] = useState('perspective(1000px) rotateX(0deg) rotateY(0deg)');
   const [glowPos, setGlowPos] = useState({ x: 50, y: 50 });
@@ -450,11 +450,11 @@ const LandingPage = () => {
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-emerald-500/30 overflow-x-hidden">
+    <div ref={containerRef} className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-indigo-500/30 overflow-x-hidden">
 
       {/* Scroll Progress Bar */}
       <motion.div
-        className="fixed top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-400 z-[100] origin-left"
+        className="fixed top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-indigo-400 via-indigo-400 to-indigo-400 z-[100] origin-left"
         style={{ scaleX }}
       />
 
@@ -470,14 +470,14 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <motion.div
-              className="bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20"
+              className="bg-indigo-500/10 p-2.5 rounded-xl border border-indigo-500/20"
               whileHover={{ rotate: 15, scale: 1.1 }}
               transition={{ type: 'spring', stiffness: 300 }}
             >
-              <Shield className="text-emerald-400" size={22} />
+              <Shield className="text-indigo-600" size={22} />
             </motion.div>
             <span className="text-xl font-bold tracking-tight text-slate-900">
-              SafePrint<span className="text-emerald-500">.</span>
+              SafePrint<span className="text-indigo-500">.</span>
             </span>
           </div>
           <div className="hidden md:flex gap-8 text-sm font-medium text-slate-600">
@@ -489,17 +489,17 @@ const LandingPage = () => {
                 whileHover={{ y: -1 }}
               >
                 {item}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-400 group-hover:w-full transition-all duration-300" />
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-400 group-hover:w-full transition-all duration-300" />
               </motion.a>
             ))}
           </div>
           <motion.div
-            className="px-6 py-2.5 rounded-full font-bold text-sm border border-emerald-500/30 bg-emerald-500/5 text-emerald-400 cursor-default relative overflow-hidden group"
+            className="px-6 py-2.5 rounded-full font-bold text-sm border border-indigo-500/30 bg-indigo-500/5 text-indigo-600 cursor-default relative overflow-hidden group"
             whileHover={{ scale: 1.05 }}
           >
             <span className="relative z-10">Coming Soon</span>
             <motion.div
-              className="absolute inset-0 bg-emerald-500/10"
+              className="absolute inset-0 bg-indigo-500/10"
               initial={{ x: '-100%' }}
               whileHover={{ x: 0 }}
               transition={{ duration: 0.3 }}
@@ -521,8 +521,8 @@ const LandingPage = () => {
         }}
       >
         {/* Background glows */}
-        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-emerald-500/8 rounded-full blur-[120px] -z-10" />
-        <div className="absolute top-40 left-1/4 w-[400px] h-[400px] bg-cyan-500/5 rounded-full blur-[100px] -z-10" />
+        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-indigo-500/8 rounded-full blur-[120px] -z-10" />
+        <div className="absolute top-40 left-1/4 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-[100px] -z-10" />
         <div className="absolute top-60 right-1/4 w-[300px] h-[300px] bg-purple-500/5 rounded-full blur-[80px] -z-10" />
 
         <div className="grid lg:grid-cols-2 gap-8 items-center">
@@ -535,14 +535,14 @@ const LandingPage = () => {
           >
             {/* Status Badge */}
             <motion.div
-              className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-emerald-100 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-widest mb-8"
+              className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-indigo-100 border border-indigo-500/20 text-indigo-600 text-xs font-bold uppercase tracking-widest mb-8"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3, duration: 0.6 }}
             >
               <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500" />
               </span>
               Live System Status: Operational
             </motion.div>
@@ -555,7 +555,7 @@ const LandingPage = () => {
             >
               Share Once.{' '}
               <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-cyan-300 to-emerald-400 bg-[length:200%_auto] animate-gradient-shift">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-indigo-300 to-indigo-400 bg-[length:200%_auto] animate-gradient-shift">
                 Gone Forever.
               </span>
             </motion.h1>
@@ -568,7 +568,7 @@ const LandingPage = () => {
             >
               The ephemeral file-transfer protocol for high-stakes environments.
               Upload files that automatically self-destruct after a single print.
-              <span className="block mt-3 text-emerald-400/80 font-semibold tracking-wide">
+              <span className="block mt-3 text-indigo-600/80 font-semibold tracking-wide">
                 No Logs. No Accounts. No Trace.
               </span>
             </motion.p>
@@ -581,7 +581,7 @@ const LandingPage = () => {
             >
               <motion.button
                 onClick={() => navigate('/upload')}
-                className="lg:min-w-[260px] bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 px-8 py-4 rounded-2xl font-bold text-base transition-all flex items-center justify-center gap-2.5 shadow-2xl shadow-emerald-500/25 group"
+                className="lg:min-w-[260px] bg-gradient-to-r from-indigo-500 to-indigo-400 hover:from-indigo-400 hover:to-indigo-400 text-slate-950 px-8 py-4 rounded-2xl font-bold text-base transition-all flex items-center justify-center gap-2.5 shadow-2xl shadow-indigo-500/25 group"
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -593,20 +593,20 @@ const LandingPage = () => {
               <div className="flex flex-col sm:flex-row gap-3 flex-1 lg:flex-none">
                 <motion.button
                   onClick={() => navigate('/nearby')}
-                  className="flex-1 lg:px-6 py-4 rounded-2xl font-bold text-sm text-slate-900 border border-slate-300/80 bg-white/5 hover:bg-white/10 hover:border-emerald-500 transition-all backdrop-blur-sm flex items-center justify-center gap-2 whitespace-nowrap"
+                  className="flex-1 lg:px-6 py-4 rounded-2xl font-bold text-sm text-slate-900 border border-slate-300/80 bg-white/5 hover:bg-white/10 hover:border-indigo-500 transition-all backdrop-blur-sm flex items-center justify-center gap-2 whitespace-nowrap"
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <MapPin size={18} className="text-emerald-400" />
+                  <MapPin size={18} className="text-indigo-600" />
                   Find Local Shops
                 </motion.button>
                 <motion.button
                   onClick={() => navigate('/business')}
-                  className="flex-1 lg:px-6 py-4 rounded-2xl font-bold text-sm text-slate-700 border border-slate-300/80 bg-white/5 hover:bg-white/10 hover:border-cyan-500 transition-all backdrop-blur-sm flex items-center justify-center gap-2 whitespace-nowrap"
+                  className="flex-1 lg:px-6 py-4 rounded-2xl font-bold text-sm text-slate-700 border border-slate-300/80 bg-white/5 hover:bg-white/10 hover:border-indigo-500 transition-all backdrop-blur-sm flex items-center justify-center gap-2 whitespace-nowrap"
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <Store size={18} className="text-cyan-400" />
+                  <Store size={18} className="text-indigo-600" />
                   For Business Owners
                 </motion.button>
               </div>
@@ -630,12 +630,12 @@ const LandingPage = () => {
 
       {/* ===== TARGET SECTORS — 3D Tilt Cards ===== */}
       <section id="features" className="py-16 bg-white/20 border-y border-slate-200 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-emerald-500/3 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-indigo-500/3 to-transparent pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <ScrollSection>
             <div className="text-center mb-20">
-              <motion.span className="inline-block px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-widest mb-5">
+              <motion.span className="inline-block px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 text-xs font-bold uppercase tracking-widest mb-5">
                 Use Cases
               </motion.span>
               <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-5">Real-World Solutions</h2>
@@ -648,13 +648,13 @@ const LandingPage = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-7">
             {[
               {
-                icon: <Printer className="text-emerald-400" size={30} />,
+                icon: <Printer className="text-indigo-600" size={30} />,
                 title: 'Xerox & Print Shops',
                 badge: 'WhatsApp Bridge',
                 desc: 'Stop logging into WhatsApp Web on public PCs. Securely print sensitive IDs and seamlessly unlock password-protected files like Aadhaar.',
-                borderColor: 'border-emerald-500/20 hover:border-emerald-500/60',
-                glowColor: 'rgba(52,211,153,0.12)',
-                iconBg: 'bg-emerald-500/10',
+                borderColor: 'border-indigo-500/20 hover:border-indigo-500/60',
+                glowColor: 'rgba(99,102,241,0.12)',
+                iconBg: 'bg-indigo-500/10',
               },
               {
                 icon: <School className="text-blue-400" size={30} />,
@@ -710,7 +710,7 @@ const LandingPage = () => {
 
       {/* ===== STATS SECTION ===== */}
       <section id="stats" className="py-20 pt-28 -mt-20 relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 via-transparent to-cyan-500/5 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 via-transparent to-indigo-500/5 pointer-events-none" />
         <div className="max-w-5xl mx-auto px-6">
           <ScrollSection>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
@@ -732,7 +732,7 @@ const LandingPage = () => {
                 className="inline-flex items-center justify-center p-4 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-300/50 mb-8 shadow-lg"
                 whileHover={{ rotate: 5, scale: 1.05 }}
               >
-                <Lock className="text-emerald-400" size={30} />
+                <Lock className="text-indigo-600" size={30} />
               </motion.div>
               <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-7 leading-tight">
                 The{' '}
@@ -757,7 +757,7 @@ const LandingPage = () => {
                       className="flex gap-5 p-4 rounded-xl hover:bg-white/50 transition-colors duration-300 group cursor-default"
                       whileHover={{ x: 5 }}
                     >
-                      <div className="mt-0.5 p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20 text-emerald-400 group-hover:scale-110 transition-transform flex-shrink-0">
+                      <div className="mt-0.5 p-2 bg-indigo-500/10 rounded-lg border border-indigo-500/20 text-indigo-600 group-hover:scale-110 transition-transform flex-shrink-0">
                         {feature.icon}
                       </div>
                       <div>
@@ -774,7 +774,7 @@ const LandingPage = () => {
           {/* Code Block */}
           <ScrollSection delay={0.2}>
             <TiltCard
-              glowColor="rgba(52,211,153,0.08)"
+              glowColor="rgba(99,102,241,0.08)"
               className="relative bg-white border border-slate-300/60 rounded-3xl p-8 overflow-hidden group"
             >
               <div className="absolute inset-0 opacity-[0.03]" style={{
@@ -797,7 +797,7 @@ const LandingPage = () => {
                     { content: <span className="pl-5"><span className="text-blue-400">await</span> streamFile(res, filePath);</span>, delay: 0.2 },
                     { content: <span className="pl-5 text-slate-600">{'// 2. Trigger immediate destruction'}</span>, delay: 0.3 },
                     { content: <span className="pl-5 text-red-400 font-semibold">fs.unlinkSync(filePath);</span>, delay: 0.4 },
-                    { content: <span className="pl-5 text-emerald-400">console.log(<span className="text-emerald-300">"EVIDENCE_DESTROYED"</span>);</span>, delay: 0.5 },
+                    { content: <span className="pl-5 text-indigo-600">console.log(<span className="text-indigo-300">"EVIDENCE_DESTROYED"</span>);</span>, delay: 0.5 },
                     { content: <span>{'}'}</span>, delay: 0.6 },
                   ].map((line, i) => (
                     <motion.p
@@ -818,7 +818,7 @@ const LandingPage = () => {
               <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none" />
 
               <motion.div
-                className="absolute bottom-10 left-[72px] w-2 h-5 bg-emerald-400/80"
+                className="absolute bottom-10 left-[72px] w-2 h-5 bg-indigo-400/80"
                 animate={{ opacity: [1, 0, 1] }}
                 transition={{ duration: 1, repeat: Infinity }}
               />
@@ -829,7 +829,7 @@ const LandingPage = () => {
 
       {/* ===== CTA SECTION ===== */}
       <section className="py-16 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-emerald-500/5 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-indigo-500/5 to-transparent pointer-events-none" />
         <ScrollSection>
           <div className="max-w-4xl mx-auto px-6 text-center">
             <motion.div
@@ -840,7 +840,7 @@ const LandingPage = () => {
             >
               <h2 className="text-4xl md:text-6xl font-extrabold text-slate-900 mb-6">
                 Ready to go{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-indigo-400">
                   ghost mode
                 </span>
                 ?
@@ -851,7 +851,7 @@ const LandingPage = () => {
               </p>
               <motion.button
                 onClick={() => navigate('/upload')}
-                className="bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 px-12 py-5 rounded-2xl font-bold text-xl shadow-2xl shadow-emerald-500/30 group inline-flex items-center gap-3"
+                className="bg-gradient-to-r from-indigo-500 to-indigo-500 text-slate-950 px-12 py-5 rounded-2xl font-bold text-xl shadow-2xl shadow-indigo-500/30 group inline-flex items-center gap-3"
                 whileHover={{ scale: 1.05, y: -3 }}
                 whileTap={{ scale: 0.97 }}
               >
@@ -868,8 +868,8 @@ const LandingPage = () => {
       <footer className="border-t border-slate-200 py-14 relative">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-3">
-            <div className="bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20">
-              <Shield className="text-emerald-400" size={18} />
+            <div className="bg-indigo-500/10 p-2 rounded-lg border border-indigo-500/20">
+              <Shield className="text-indigo-600" size={18} />
             </div>
             <span className="text-sm text-slate-500">
               © 2026 SafePrint Technologies. Designed for the RNSIT Innovation Lab.
@@ -877,7 +877,7 @@ const LandingPage = () => {
           </div>
           <div className="flex gap-8 text-sm text-slate-500">
             {['Privacy Policy', 'Terms of Destruction', 'GitHub'].map((link) => (
-              <a key={link} href="#" className="hover:text-emerald-400 transition-colors duration-300">
+              <a key={link} href="#" className="hover:text-indigo-600 transition-colors duration-300">
                 {link}
               </a>
             ))}

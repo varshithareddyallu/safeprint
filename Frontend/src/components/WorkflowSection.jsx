@@ -88,22 +88,22 @@ const WorkflowSection = () => {
 
   const accentStyles = {
     emerald: {
-      dot: 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400 shadow-emerald-500/20',
-      badge: 'bg-emerald-500 text-slate-950',
-      card: 'border-emerald-500/15 hover:border-emerald-500/40 hover:shadow-emerald-500/10',
-      tag: 'bg-emerald-500/10 text-emerald-400/80 border-emerald-500/20',
+      dot: 'border-indigo-500/50 bg-indigo-500/10 text-indigo-600 shadow-indigo-500/20',
+      badge: 'bg-indigo-500 text-white',
+      card: 'border-indigo-500/15 hover:border-indigo-500/40 hover:shadow-indigo-500/10',
+      tag: 'bg-indigo-500/10 text-indigo-600/80 border-indigo-500/20',
       line: 'linear-gradient(180deg, transparent 0%, #10b981 15%, #10b981 85%, transparent 100%)',
-      result: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400',
-      toggleActive: 'bg-gradient-to-r from-emerald-500 to-emerald-400 text-slate-950 shadow-lg shadow-emerald-500/25',
+      result: 'bg-indigo-500/10 border-indigo-500/30 text-indigo-600',
+      toggleActive: 'bg-gradient-to-r from-indigo-500 to-indigo-400 text-white shadow-lg shadow-indigo-500/25',
     },
     cyan: {
-      dot: 'border-cyan-500/50 bg-cyan-500/10 text-cyan-400 shadow-cyan-500/20',
-      badge: 'bg-cyan-500 text-slate-950',
-      card: 'border-cyan-500/15 hover:border-cyan-500/40 hover:shadow-cyan-500/10',
-      tag: 'bg-cyan-500/10 text-cyan-400/80 border-cyan-500/20',
+      dot: 'border-indigo-500/50 bg-indigo-500/10 text-indigo-600 shadow-indigo-500/20',
+      badge: 'bg-indigo-500 text-white',
+      card: 'border-indigo-500/15 hover:border-indigo-500/40 hover:shadow-indigo-500/10',
+      tag: 'bg-indigo-500/10 text-indigo-600/80 border-indigo-500/20',
       line: 'linear-gradient(180deg, transparent 0%, #06b6d4 15%, #06b6d4 85%, transparent 100%)',
-      result: 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400',
-      toggleActive: 'bg-gradient-to-r from-cyan-500 to-blue-400 text-slate-950 shadow-lg shadow-cyan-500/25',
+      result: 'bg-indigo-500/10 border-indigo-500/30 text-indigo-600',
+      toggleActive: 'bg-gradient-to-r from-indigo-500 to-blue-400 text-white shadow-lg shadow-indigo-500/25',
     },
   };
 
@@ -115,7 +115,7 @@ const WorkflowSection = () => {
         {/* Header */}
         <ScrollReveal>
           <div className="text-center mb-16">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-widest mb-5">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 text-xs font-bold uppercase tracking-widest mb-5">
               Workflow
             </span>
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-5">How It Works</h2>

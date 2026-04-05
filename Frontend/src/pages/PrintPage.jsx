@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { QrReader } from 'react-qr-reader';
-import { Printer, Loader2, CheckCircle2, IndianRupee, Eye, ChevronLeft, ShieldAlert } from 'lucide-react';
+import { Printer, Loader2, CheckCircle2, IndianRupee, Eye, ChevronLeft, ShieldAlert, Store } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { API_BASE_URL } from '../config';
 import PdfCanvasViewer from '../components/PdfCanvasViewer';
@@ -11,29 +11,24 @@ const PrintPage = () => {
   const [status, setStatus] = useState('');
   const [showScanner, setShowScanner] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
-  const [printResult, setPrintResult] = useState(null); // null | 'success' | 'error'
+  const [printResult, setPrintResult] = useState(null);
   
-  // -- NEW BATCH STATE --
   const [batchInfo, setBatchInfo] = useState(null);
   const [checkoutData, setCheckoutData] = useState(null);
 
-  // -- SECURE PREVIEW STATE --
   const [previewUrl, setPreviewUrl] = useState('');
   const [previewContentType, setPreviewContentType] = useState('');
   const [selectedFileIndex, setSelectedFileIndex] = useState(null);
   const [isSecureBlanked, setIsSecureBlanked] = useState(false);
 
-  // --- Anti-screenshot etc ---
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Prevent screenshots via common OS shortcuts
       if (e.key === 'PrintScreen' || ['Meta', 'Shift', 'Alt', 'Control', 'OS'].includes(e.key)) {
         setIsSecureBlanked(true);
         setTimeout(() => setIsSecureBlanked(false), 3000);
       }
     };
     
-    // Blank screen instantly if focus is lost (tab switched, secondary monitor screenshot tool active)
     const handleBlur = () => { setIsSecureBlanked(true); };
     const handleFocus = () => { setIsSecureBlanked(false); };
 
@@ -41,7 +36,6 @@ const PrintPage = () => {
     window.addEventListener('blur', handleBlur);
     window.addEventListener('focus', handleFocus);
 
-    // Prevent right clicks and copy operations
     const preventAction = (e) => e.preventDefault();
     document.addEventListener('contextmenu', preventAction);
     document.addEventListener('copy', preventAction);
@@ -64,10 +58,10 @@ const PrintPage = () => {
       const response = await axios.get(`${API_BASE_URL}/download/${code}/${index}`);
       setPreviewUrl(`${API_BASE_URL}/download/${code}/${index}`);
       setPreviewContentType(response.headers['content-type'] || 'application/pdf');
-      setStatus('✅ Secure Preview loaded.');
+      setStatus('Secure Preview loaded.');
     } catch (error) {
       console.error(error);
-      setStatus('❌ Failed to load file preview.');
+      setStatus('Failed to load file preview.');
     }
   };
 
@@ -82,10 +76,10 @@ const PrintPage = () => {
       setPrintResult(null);
       const response = await axios.get(`${API_BASE_URL}/info/${code}`);
       setBatchInfo(response.data);
-      setStatus('✅ Info loaded. Ready to print.');
+      setStatus('Info loaded. Ready to print.');
     } catch (error) {
       console.error(error);
-      setStatus('❌ Invalid code or files have been deleted.');
+      setStatus('Invalid code or files have been deleted.');
       setBatchInfo(null);
     }
   };
@@ -98,13 +92,12 @@ const PrintPage = () => {
       
       await axios.post(`${API_BASE_URL}/print/${code}`);
       
-      // --- Dynamic Payment Calculation (Mock) ---
-      const baseRate = 2.0; // ₹2.00 per page base
-      const surgeMultiplier = 1.15; // API or Shop rule: +15% Surge
-      const assumedPages = batchInfo.files.length * 4; // Mocking 4 pages per doc for demo
+      const baseRate = 2.0;
+      const surgeMultiplier = 1.15;
+      const assumedPages = batchInfo.files.length * 4;
       const totalAmount = (assumedPages * baseRate * surgeMultiplier).toFixed(2);
       
-      const upiId = "partner@upi"; // Should come from Shop Owner's settings in a real app
+      const upiId = "partner@upi";
       const upiLink = `upi://pay?pa=${upiId}&pn=SafePrint%20Partner&am=${totalAmount}&cu=INR`;
 
       setCheckoutData({
@@ -114,13 +107,13 @@ const PrintPage = () => {
         surgeInfo: "+15% AI Surge Applied"
       });
 
-      setStatus('✅ Documents sent to printer. Awaiting customer payment.');
+      setStatus('Documents sent to printer. Awaiting customer payment.');
       setPrintResult('success');
       setCode('');
     } catch (error) {
       console.error("Print Error Details:", error);
       const msg = error.response?.data?.error || `Error: ${error.message}`;
-      setStatus(`❌ ${msg}`);
+      setStatus(msg);
       setPrintResult('error');
     } finally {
       setIsPrinting(false);
@@ -136,10 +129,7 @@ const PrintPage = () => {
       setStatus('');
       setPrintResult(null);
       setShowScanner(false);
-      // Auto-fetch info on scan
       setTimeout(() => {
-         // Because setState is async, we pass the code directly down or rely on effect.
-         // Easiest is to just call a modified fetch with the extracted Code.
          fetchInfoDirect(extractedCode);
       }, 100);
     }
@@ -152,221 +142,240 @@ const PrintPage = () => {
       setPrintResult(null);
       const response = await axios.get(`${API_BASE_URL}/info/${c}`);
       setBatchInfo(response.data);
-      setStatus('✅ Info loaded. Ready to print.');
+      setStatus('Info loaded. Ready to print.');
     } catch (error) {
       console.error(error);
-      setStatus('❌ Invalid code or files have been deleted.');
+      setStatus('Invalid code or files have been deleted.');
       setBatchInfo(null);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-200 to-indigo-300 p-4">
-      <div className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-2xl">
-        <h1 className="text-2xl font-bold text-center mb-2 text-indigo-700">Print Section</h1>
-        <p className="text-sm text-gray-500 text-center mb-6">
-          Enter or scan the unique code to securely print the file.
-        </p>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-slate-50 font-sans">
+      {/* Navbar */}
+      <nav className="border-b border-slate-200 bg-white/80 backdrop-blur-xl sticky top-0 z-40 shadow-sm">
+        <div className="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center">
+              <Store className="text-white w-4 h-4" />
+            </div>
+            <span className="font-bold text-slate-900">SafePrint <span className="text-indigo-600">Receiver</span></span>
+          </div>
+        </div>
+      </nav>
 
-        {!batchInfo ? (
-          <div className="max-w-md mx-auto">
-            <input
-              type="text"
-              placeholder="Enter unique code"
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-center text-xl font-mono uppercase"
-              value={code}
-              onChange={(e) => { setCode(e.target.value); setPrintResult(null); setStatus(''); }}
-            />
+      <div className="flex items-center justify-center p-6 pt-10">
+        <div className="bg-white border border-slate-200 shadow-xl shadow-slate-200/50 rounded-3xl p-8 w-full max-w-2xl relative overflow-hidden">
+          {/* Top accent */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-indigo-400 to-emerald-400" />
 
-            {status && (
-              <div className={`mb-4 flex items-center justify-center gap-2 text-sm p-3 rounded-lg ${
-                printResult === 'error' ? 'bg-red-100 text-red-700' : 'bg-indigo-50 text-indigo-700'
+          <h1 className="text-2xl font-extrabold text-center mb-2 text-slate-900">Print Section</h1>
+          <p className="text-sm text-slate-500 text-center mb-6">
+            Enter or scan the unique code to securely print the file.
+          </p>
+
+          {!batchInfo ? (
+            <div className="max-w-md mx-auto">
+              <input
+                type="text"
+                placeholder="Enter unique code"
+                className="w-full border border-slate-200 bg-slate-50 rounded-xl px-4 py-3.5 mb-4 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 text-center text-xl font-mono uppercase text-slate-800 transition"
+                value={code}
+                onChange={(e) => { setCode(e.target.value); setPrintResult(null); setStatus(''); }}
+              />
+
+              {status && (
+                <div className={`mb-4 flex items-center justify-center gap-2 text-sm p-3 rounded-xl font-medium ${
+                  printResult === 'error' ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                }`}>
+                  {status}
+                </div>
+              )}
+
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={handleFetchInfo}
+                  disabled={!code || isPrinting}
+                  className="w-full bg-indigo-600 text-white font-bold py-3.5 rounded-xl hover:bg-indigo-700 transition shadow-md shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Fetch Documents
+                </button>
+
+                <button
+                  onClick={() => setShowScanner(!showScanner)}
+                  className="w-full bg-slate-100 text-slate-700 font-semibold py-3 rounded-xl hover:bg-slate-200 transition border border-slate-200"
+                >
+                  {showScanner ? 'Close Scanner' : 'Scan QR Code'}
+                </button>
+              </div>
+
+              {showScanner && (
+                <div className="mt-4 border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                  <QrReader
+                    constraints={{ facingMode: 'environment' }}
+                    onResult={handleScan}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-6">
+              <div className={`w-full flex items-center justify-center gap-2 text-sm p-3 rounded-xl font-medium ${
+                printResult === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                printResult === 'error'   ? 'bg-red-50 text-red-600 border border-red-200' :
+                'bg-indigo-50 text-indigo-700 border border-indigo-200'
               }`}>
+                {isPrinting && <Loader2 className="w-4 h-4 animate-spin" />}
                 {status}
               </div>
-            )}
 
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={handleFetchInfo}
-                disabled={!code || isPrinting}
-                className="w-full bg-indigo-600 text-white font-semibold py-3 rounded-lg hover:bg-indigo-700 transition duration-200 disabled:bg-indigo-300"
-              >
-                Fetch Documents
-              </button>
-
-              <button
-                onClick={() => setShowScanner(!showScanner)}
-                className="w-full bg-gray-200 text-indigo-700 font-semibold py-2 rounded-lg hover:bg-gray-300 transition duration-200"
-              >
-                {showScanner ? 'Close Scanner' : 'Scan QR Code'}
-              </button>
-            </div>
-
-            {showScanner && (
-              <div className="mt-4 border-2 border-indigo-100 rounded-lg overflow-hidden">
-                <QrReader
-                  constraints={{ facingMode: 'environment' }}
-                  onResult={handleScan}
-                  style={{ width: '100%' }}
-                />
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-6">
-            <div className={`w-full flex items-center justify-center gap-2 text-sm p-3 rounded-lg ${
-              printResult === 'success' ? 'bg-green-100 text-green-700' :
-              printResult === 'error'   ? 'bg-red-100 text-red-700' :
-              'bg-indigo-50 text-indigo-700'
-            }`}>
-              {isPrinting && <Loader2 className="w-4 h-4 animate-spin" />}
-              {status}
-            </div>
-
-            {checkoutData ? (
-              /* --- POINT OF SALE PAYMENT UI --- */
-              <div className="w-full bg-white border border-slate-200 rounded-2xl p-8 shadow-xl text-center relative overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-emerald-400 to-cyan-400"></div>
-                <div className="flex justify-center mb-4">
-                  <CheckCircle2 className="w-16 h-16 text-emerald-500" />
-                </div>
-                <h2 className="text-2xl font-extrabold text-slate-800 mb-2">Print Successful</h2>
-                <p className="text-slate-500 text-sm mb-8">Please ask the customer to scan to pay.</p>
-
-                <div className="flex justify-center mb-6">
-                  <div className="p-4 bg-white border-4 border-emerald-100 rounded-3xl shadow-sm">
-                    <QRCodeSVG 
-                      value={checkoutData.upiLink} 
-                      size={200}
-                      level={"H"}
-                      includeMargin={true}
-                    />
-                  </div>
-                </div>
-
-                <div className="bg-slate-50 rounded-xl p-4 mb-6 border border-slate-100">
-                   <div className="flex justify-between items-center mb-2">
-                     <span className="text-slate-500 text-sm font-medium">Est. Pages Printed</span>
-                     <span className="text-slate-800 font-bold">{checkoutData.pages}</span>
-                   </div>
-                   <div className="flex justify-between items-center pb-3 border-b border-slate-200 mb-3">
-                     <span className="text-slate-500 text-sm font-medium">Pricing Status</span>
-                     <span className="text-purple-600 font-bold text-xs bg-purple-100 px-2 py-0.5 rounded">{checkoutData.surgeInfo}</span>
-                   </div>
-                   <div className="flex justify-between items-center">
-                     <span className="text-slate-500 font-bold uppercase tracking-wide">Total Amount</span>
-                     <span className="text-3xl font-extrabold text-emerald-600 flex items-center gap-1">
-                       <IndianRupee className="w-6 h-6" />{checkoutData.amount}
-                     </span>
-                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <button
-                    onClick={() => { setCheckoutData(null); setBatchInfo(null); setStatus(''); setPrintResult(null); }}
-                    className="w-full bg-emerald-100 text-emerald-800 font-bold py-3 rounded-xl hover:bg-emerald-200 transition shadow-sm border border-emerald-200"
-                  >
-                    Paid by Cash
-                  </button>
-                  <button
-                    onClick={() => { setCheckoutData(null); setBatchInfo(null); setStatus(''); setPrintResult(null); }}
-                    className="w-full bg-blue-100 text-blue-800 font-bold py-3 rounded-xl hover:bg-blue-200 transition shadow-sm border border-blue-200"
-                  >
-                    Paid by Card
-                  </button>
-                </div>
-                <button
-                  onClick={() => { setCheckoutData(null); setBatchInfo(null); setStatus(''); setPrintResult(null); }}
-                  className="w-full bg-slate-900 text-white font-bold py-4 rounded-xl hover:bg-slate-800 transition shadow-lg"
-                >
-                  Complete Transaction & Return
-                </button>
-              </div>
-            ) : previewUrl ? (
-              /* --- SECURE PREVIEW UI --- */
-              <div className="w-full flex flex-col gap-4">
-                <button
-                  onClick={() => { setPreviewUrl(''); setSelectedFileIndex(null); setStatus(''); }}
-                  className="self-start flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800 font-bold transition"
-                >
-                  <ChevronLeft className="w-4 h-4" /> Back to Files
-                </button>
-                <div className="w-full h-[500px] border-4 border-gray-800 rounded-xl relative overflow-hidden bg-gray-50 select-none shadow-inner">
-                  {isSecureBlanked && (
-                    <div className="absolute inset-0 bg-gray-900 flex flex-col items-center justify-center z-50 text-red-500">
-                       <ShieldAlert className="w-16 h-16 mb-4 animate-pulse" />
-                       <p className="font-extrabold text-xl tracking-widest">SCREENSHOT DETECTED</p>
-                       <p className="text-sm font-medium mt-2 text-white/70">Preview locked for privacy.</p>
+              {checkoutData ? (
+                /* --- POINT OF SALE PAYMENT UI --- */
+                <div className="w-full bg-white border border-slate-200 rounded-2xl p-8 shadow-lg text-center relative overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-400 to-indigo-400"></div>
+                  <div className="flex justify-center mb-4">
+                    <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center">
+                      <CheckCircle2 className="w-10 h-10 text-emerald-600" />
                     </div>
-                  )}
-                  <div className={`w-full h-full transition-opacity duration-75 ${isSecureBlanked ? 'opacity-0' : 'opacity-100'}`}>
-                    {previewContentType.includes('image') ? (
-                      <img src={previewUrl} alt="Secure Doc" className="w-full h-full object-contain pointer-events-none" />
-                    ) : (
-                      <PdfCanvasViewer url={previewUrl} />
+                  </div>
+                  <h2 className="text-2xl font-extrabold text-slate-900 mb-2">Print Successful</h2>
+                  <p className="text-slate-500 text-sm mb-8">Please ask the customer to scan to pay.</p>
+
+                  <div className="flex justify-center mb-6">
+                    <div className="p-4 bg-white border-2 border-slate-200 rounded-2xl shadow-sm">
+                      <QRCodeSVG 
+                        value={checkoutData.upiLink} 
+                        size={200}
+                        level={"H"}
+                        includeMargin={true}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-50 rounded-xl p-5 mb-6 border border-slate-200">
+                     <div className="flex justify-between items-center mb-3">
+                       <span className="text-slate-500 text-sm font-medium">Est. Pages Printed</span>
+                       <span className="text-slate-800 font-bold">{checkoutData.pages}</span>
+                     </div>
+                     <div className="flex justify-between items-center pb-3 border-b border-slate-200 mb-3">
+                       <span className="text-slate-500 text-sm font-medium">Pricing Status</span>
+                       <span className="text-indigo-700 font-bold text-xs bg-indigo-100 px-2.5 py-1 rounded-full border border-indigo-200">{checkoutData.surgeInfo}</span>
+                     </div>
+                     <div className="flex justify-between items-center">
+                       <span className="text-slate-500 font-bold uppercase tracking-wide text-sm">Total Amount</span>
+                       <span className="text-3xl font-extrabold text-emerald-600 flex items-center gap-1">
+                         <IndianRupee className="w-6 h-6" />{checkoutData.amount}
+                       </span>
+                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <button
+                      onClick={() => { setCheckoutData(null); setBatchInfo(null); setStatus(''); setPrintResult(null); }}
+                      className="w-full bg-emerald-50 text-emerald-700 font-bold py-3.5 rounded-xl hover:bg-emerald-100 transition border border-emerald-200"
+                    >
+                      Paid by Cash
+                    </button>
+                    <button
+                      onClick={() => { setCheckoutData(null); setBatchInfo(null); setStatus(''); setPrintResult(null); }}
+                      className="w-full bg-blue-50 text-blue-700 font-bold py-3.5 rounded-xl hover:bg-blue-100 transition border border-blue-200"
+                    >
+                      Paid by Card
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => { setCheckoutData(null); setBatchInfo(null); setStatus(''); setPrintResult(null); }}
+                    className="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl hover:bg-indigo-700 transition shadow-md shadow-indigo-500/20"
+                  >
+                    Complete Transaction & Return
+                  </button>
+                </div>
+              ) : previewUrl ? (
+                /* --- SECURE PREVIEW UI --- */
+                <div className="w-full flex flex-col gap-4">
+                  <button
+                    onClick={() => { setPreviewUrl(''); setSelectedFileIndex(null); setStatus(''); }}
+                    className="self-start flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-700 font-bold transition"
+                  >
+                    <ChevronLeft className="w-4 h-4" /> Back to Files
+                  </button>
+                  <div className="w-full h-[500px] border-2 border-slate-200 rounded-xl relative overflow-hidden bg-slate-50 select-none shadow-inner">
+                    {isSecureBlanked && (
+                      <div className="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center z-50 text-red-400">
+                         <ShieldAlert className="w-16 h-16 mb-4 animate-pulse" />
+                         <p className="font-extrabold text-xl tracking-widest text-white">SCREENSHOT DETECTED</p>
+                         <p className="text-sm font-medium mt-2 text-slate-400">Preview locked for privacy.</p>
+                      </div>
                     )}
+                    <div className={`w-full h-full transition-opacity duration-75 ${isSecureBlanked ? 'opacity-0' : 'opacity-100'}`}>
+                      {previewContentType.includes('image') ? (
+                        <img src={previewUrl} alt="Secure Doc" className="w-full h-full object-contain pointer-events-none" />
+                      ) : (
+                        <PdfCanvasViewer url={previewUrl} />
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ) : (
-              /* --- BATCH REVIEW UI --- */
-              <>
-                <div className="w-full text-left bg-gray-50 border border-gray-200 rounded-xl p-6 shadow-inner">
-                   <h3 className="text-xl font-bold text-gray-800 border-b pb-2 mb-4">
-                      {batchInfo.files.length} Document{batchInfo.files.length !== 1 ? 's' : ''} Ready for Print
-                   </h3>
-                   
-                   {batchInfo.comment && (
-                     <div className="mb-6 bg-yellow-50 border border-yellow-200 p-4 rounded-lg shadow-sm">
-                        <p className="text-xs font-bold text-yellow-800 uppercase tracking-wide mb-1">Message from Customer:</p>
-                        <p className="text-sm text-yellow-900 whitespace-pre-wrap font-medium">{batchInfo.comment}</p>
-                     </div>
-                   )}
+              ) : (
+                /* --- BATCH REVIEW UI --- */
+                <>
+                  <div className="w-full text-left bg-slate-50 border border-slate-200 rounded-2xl p-6">
+                     <h3 className="text-xl font-extrabold text-slate-900 border-b border-slate-200 pb-3 mb-4">
+                        {batchInfo.files.length} Document{batchInfo.files.length !== 1 ? 's' : ''} Ready for Print
+                     </h3>
+                     
+                     {batchInfo.comment && (
+                       <div className="mb-6 bg-amber-50 border border-amber-200 p-4 rounded-xl">
+                          <p className="text-xs font-bold text-amber-700 uppercase tracking-wide mb-1">Message from Customer:</p>
+                          <p className="text-sm text-amber-800 whitespace-pre-wrap font-medium">{batchInfo.comment}</p>
+                       </div>
+                     )}
 
-                   <ul className="space-y-2 mb-2 max-h-60 overflow-y-auto pr-2">
-                     {batchInfo.files.map((f, i) => (
-                       <li key={i} className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:border-indigo-300 transition group">
-                          <div className="flex-1 truncate text-sm font-medium text-gray-700">{f.name}</div>
-                          {f.encrypted && <span className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full font-bold uppercase tracking-wider">Encrypted</span>}
-                          <button 
-                            onClick={() => previewFile(code, f.index)}
-                            className="p-1.5 text-gray-400 border border-transparent rounded hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 transition"
-                            title="Securely Preview Document"
-                          >
-                            <Eye className="w-5 h-5" />
-                          </button>
-                       </li>
-                     ))}
-                   </ul>
-                </div>
+                     <ul className="space-y-2 mb-2 max-h-60 overflow-y-auto pr-2" style={{scrollbarWidth:'thin'}}>
+                       {batchInfo.files.map((f, i) => (
+                         <li key={i} className="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl hover:border-indigo-300 transition group">
+                            <div className="flex-1 truncate text-sm font-semibold text-slate-700">{f.name}</div>
+                            {f.encrypted && <span className="text-[10px] bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider border border-indigo-200">Encrypted</span>}
+                            <button 
+                              onClick={() => previewFile(code, f.index)}
+                              className="p-1.5 text-slate-400 border border-transparent rounded-lg hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 transition"
+                              title="Securely Preview Document"
+                            >
+                              <Eye className="w-5 h-5" />
+                            </button>
+                         </li>
+                       ))}
+                     </ul>
+                  </div>
 
-                <div className="w-full flex flex-col gap-3 max-w-md">
-                  <button
-                    onClick={handlePrint}
-                    disabled={isPrinting}
-                    className="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl hover:bg-indigo-700 transition duration-200 flex items-center justify-center gap-2 shadow-lg"
-                  >
-                    {isPrinting
-                      ? <><Loader2 className="w-6 h-6 animate-spin" /> Printing...</>
-                      : <><Printer className="w-6 h-6" /> Print Document Now</>}
-                  </button>
-                  
-                  <button
-                    onClick={() => { setBatchInfo(null); setStatus(''); }}
-                    className="w-full bg-gray-200 text-gray-700 font-semibold py-4 rounded-xl hover:bg-gray-300 transition"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        )}
+                  <div className="w-full flex flex-col gap-3 max-w-md">
+                    <button
+                      onClick={handlePrint}
+                      disabled={isPrinting}
+                      className="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl hover:bg-indigo-700 transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isPrinting
+                        ? <><Loader2 className="w-6 h-6 animate-spin" /> Printing...</>
+                        : <><Printer className="w-6 h-6" /> Print Document Now</>}
+                    </button>
+                    
+                    <button
+                      onClick={() => { setBatchInfo(null); setStatus(''); }}
+                      className="w-full bg-slate-100 text-slate-600 font-semibold py-3.5 rounded-xl hover:bg-slate-200 transition border border-slate-200"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
 
-        <p className="text-xs text-center text-gray-400 mt-8">
-          🔒 For your security, the document is permanently deleted from our servers immediately after printing.
-        </p>
+          <p className="text-xs text-center text-slate-400 mt-8 font-medium">
+            🔒 For your security, the document is permanently deleted from our servers immediately after printing.
+          </p>
+        </div>
       </div>
     </div>
   );

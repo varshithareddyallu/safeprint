@@ -96,7 +96,7 @@ const PdfCanvasViewer = ({ url }) => {
 
       {loading && (
         <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 gap-2 bg-slate-800/80 z-20">
-            <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
             <p className="text-sm font-medium">Rendering secure preview...</p>
         </div>
       )}

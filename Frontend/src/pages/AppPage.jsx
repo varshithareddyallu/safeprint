@@ -1,18 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { QRCodeCanvas } from 'qrcode.react';
-import { QrReader } from 'react-qr-reader';
-import { Upload, Printer, Copy, Check, Loader2, ShieldAlert, Eye, X, Lock, Unlock, FileText, MessageSquare, ChevronLeft } from 'lucide-react';
+import { Upload, ShieldCheck, Lock, Unlock, FileText, MessageSquare, Check, Copy, Loader2, X, ArrowRight, Printer } from 'lucide-react';
 import { API_BASE_URL } from '../config';
-import PdfCanvasViewer from '../components/PdfCanvasViewer';
 
 const AppPage = () => {
-  const location = useLocation();
-  const [activeTab, setActiveTab] = useState(location.pathname === '/print' ? 'download' : 'upload');
-
-  // --- Upload State ---
-  const [files, setFiles] = useState([]); // [{ file, encrypt, isPasswordProtected, password }]
+  const [files, setFiles] = useState([]);
   const [comment, setComment] = useState('');
   const [uploadCode, setUploadCode] = useState('');
   const [uploadStatus, setUploadStatus] = useState('');
@@ -20,66 +13,6 @@ const AppPage = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // --- Download State ---
-  const [downloadCode, setDownloadCode] = useState('');
-  const [downloadStatus, setDownloadStatus] = useState('');
-  const [showScanner, setShowScanner] = useState(false);
-  const [isPrinting, setIsPrinting] = useState(false);
-  const [printResult, setPrintResult] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState('');
-  const [previewContentType, setPreviewContentType] = useState('');
-
-  // --- Batch info state (receive side) ---
-  const [batchInfo, setBatchInfo] = useState(null); // { comment, files: [{ index, name, encrypted }] }
-  const [selectedFileIndex, setSelectedFileIndex] = useState(null);
-
-  // --- Security State ---
-  const [isSecureBlanked, setIsSecureBlanked] = useState(false);
-  const [isViewing, setIsViewing] = useState(false);
-
-  // --- Anti-screenshot etc ---
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'PrintScreen' || ['Meta', 'Shift', 'Alt', 'Control', 'OS'].includes(e.key)) {
-        setIsSecureBlanked(true);
-        setIsViewing(false);
-        setTimeout(() => setIsSecureBlanked(false), 3000);
-      }
-    };
-    const handleBlur = () => { setIsSecureBlanked(true); setIsViewing(false); };
-    const handleFocus = () => { setIsSecureBlanked(false); };
-
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('blur', handleBlur);
-    window.addEventListener('focus', handleFocus);
-
-    const preventAction = (e) => e.preventDefault();
-    document.addEventListener('contextmenu', preventAction);
-    document.addEventListener('copy', preventAction);
-    document.addEventListener('cut', preventAction);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('blur', handleBlur);
-      window.removeEventListener('focus', handleFocus);
-      document.removeEventListener('contextmenu', preventAction);
-      document.removeEventListener('copy', preventAction);
-      document.removeEventListener('cut', preventAction);
-    };
-  }, []);
-
-  // --- Auto-load from URL ---
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const codeFromUrl = params.get('code');
-    if (codeFromUrl) {
-      setActiveTab('download');
-      setDownloadCode(codeFromUrl);
-      fetchBatchInfo(codeFromUrl);
-    }
-  }, []);
-
-  // --- File management helpers ---
   const handleFilesSelected = (e) => {
     const selectedFiles = Array.from(e.target.files);
     const newEntries = selectedFiles.map(f => ({
@@ -89,7 +22,7 @@ const AppPage = () => {
       password: '',
     }));
     setFiles(prev => [...prev, ...newEntries]);
-    e.target.value = ''; // reset so same file can be re-selected
+    e.target.value = '';
   };
 
   const removeFile = (index) => {
@@ -105,7 +38,6 @@ const AppPage = () => {
     }));
   };
 
-  // --- Upload ---
   const handleUpload = async () => {
     if (files.length === 0) {
       setUploadStatus('Please select at least one file.');
@@ -113,9 +45,7 @@ const AppPage = () => {
     }
 
     const formData = new FormData();
-    files.forEach(entry => {
-      formData.append('files', entry.file);
-    });
+    files.forEach(entry => formData.append('files', entry.file));
 
     const metadata = {
       encryptionPrefs: files.map(f => ({
@@ -129,87 +59,18 @@ const AppPage = () => {
 
     try {
       setIsUploading(true);
-      setUploadStatus('Uploading...');
+      setUploadStatus('Securing and transferring files...');
       const res = await axios.post(`${API_BASE_URL}/upload`, formData);
       setUploadCode(res.data.code);
       const baseUrl = window.location.origin;
       setDownloadUrl(`${baseUrl}/print?code=${res.data.code}`);
-      setUploadStatus('✅ Files uploaded successfully.');
+      setUploadStatus('Transfer Complete');
     } catch (err) {
       console.error(err);
-      setUploadStatus('❌ Something went wrong during upload.');
+      setUploadStatus('Something went wrong during upload. Please try again.');
     } finally {
       setIsUploading(false);
     }
-  };
-
-  // --- Fetch batch info (receive side) ---
-  const fetchBatchInfo = async (code) => {
-    try {
-      setDownloadStatus('Fetching file info...');
-      setPrintResult(null);
-      setPreviewUrl('');
-      setSelectedFileIndex(null);
-      const response = await axios.get(`${API_BASE_URL}/info/${code}`);
-      setBatchInfo(response.data);
-      setDownloadStatus('');
-    } catch (error) {
-      console.error(error);
-      setDownloadStatus('❌ Invalid code or files have been deleted.');
-      setBatchInfo(null);
-    }
-  };
-
-  // --- Preview a specific file ---
-  const previewFile = async (code, index, encrypted) => {
-    try {
-      setDownloadStatus('Loading preview...');
-      setSelectedFileIndex(index);
-      const response = await axios.get(`${API_BASE_URL}/download/${code}/${index}`);
-      setPreviewUrl(`${API_BASE_URL}/download/${code}/${index}`);
-      setPreviewContentType(response.headers['content-type'] || 'application/pdf');
-      if (encrypted) {
-        setDownloadStatus('✅ Preview loaded. Hold to reveal.');
-      } else {
-        setDownloadStatus('✅ Preview loaded.');
-        setIsViewing(true);
-      }
-    } catch (error) {
-      console.error(error);
-      setDownloadStatus('❌ Failed to load file preview.');
-    }
-  };
-
-  const handlePrint = async () => {
-    try {
-      setIsPrinting(true);
-      setDownloadStatus('Sending all files to printer...');
-      setPrintResult(null);
-      await axios.post(`${API_BASE_URL}/print/${downloadCode}`);
-      setDownloadStatus('✅ All documents printed & permanently deleted.');
-      setPrintResult('success');
-      setPreviewUrl('');
-      setBatchInfo(null);
-      setDownloadCode('');
-    } catch (error) {
-      const msg = error.response?.data?.error || 'Failed to print. Please try again.';
-      setDownloadStatus(`❌ ${msg}`);
-      setPrintResult('error');
-    } finally {
-      setIsPrinting(false);
-    }
-  };
-
-  const handleScan = (result, error) => {
-    if (!!result) {
-      const scannedText = result?.text || '';
-      const url = new URL(scannedText);
-      const extractedCode = url.searchParams.get('code') || scannedText.split('/').pop();
-      setDownloadCode(extractedCode);
-      fetchBatchInfo(extractedCode);
-      setShowScanner(false);
-    }
-    if (!!error) console.warn(error);
   };
 
   const copyToClipboard = () => {
@@ -226,7 +87,6 @@ const AppPage = () => {
     setDownloadUrl('');
   };
 
-  // --- Helpers for file size display ---
   const formatSize = (bytes) => {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
@@ -234,257 +94,193 @@ const AppPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4 font-sans selection:bg-emerald-500/30">
-      <div className="bg-slate-800 shadow-2xl shadow-emerald-500/10 rounded-2xl w-full max-w-lg text-slate-200 border border-slate-700 relative overflow-hidden">
-        
-        {/* Glow Header */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-emerald-500" />
-
-        <div className="flex bg-slate-900/50 p-1">
-          <button onClick={() => setActiveTab('upload')} className={`flex-1 py-3 text-center font-bold transition rounded-lg text-sm ${activeTab === 'upload' ? 'bg-emerald-500 text-slate-900' : 'text-slate-400 hover:bg-slate-700/50'}`}>Send Files</button>
-          <button onClick={() => setActiveTab('download')} className={`flex-1 py-3 text-center font-bold transition rounded-lg text-sm ${activeTab === 'download' ? 'bg-emerald-500 text-slate-900' : 'text-slate-400 hover:bg-slate-700/50'}`}>Receive Files</button>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-slate-50 text-slate-800 font-sans relative overflow-hidden flex flex-col">
+      {/* Subtle Background Orbs */}
+      <div className="absolute top-[-15%] right-[-10%] w-[500px] h-[500px] bg-indigo-200/40 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-[-15%] left-[-10%] w-[500px] h-[500px] bg-emerald-200/30 rounded-full blur-[100px] pointer-events-none" />
+      
+      {/* Navbar */}
+      <nav className="w-full px-8 py-5 flex items-center justify-between z-10 border-b border-slate-200/60 bg-white/60 backdrop-blur-lg">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+             <ShieldCheck className="w-5 h-5 text-white" />
+          </div>
+          <span className="text-2xl font-extrabold text-slate-900 tracking-tight">Safe<span className="text-indigo-600">Print</span></span>
         </div>
+        <div className="flex items-center gap-4">
+           <a href="/nearby" className="text-sm font-semibold text-slate-500 hover:text-indigo-600 transition">Find Shops</a>
+           <a href="/business" className="text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition px-5 py-2.5 rounded-xl shadow-md shadow-indigo-500/20">Partner Login</a>
+        </div>
+      </nav>
 
-        <div className="p-6">
-          {activeTab === 'upload' ? (
-            <div className="space-y-6">
-              {!uploadCode ? (
-                <>
-                  <p className="text-slate-400 text-sm leading-relaxed">
-                    Upload multiple documents. Toggle encryption per file. Files will <span className="text-emerald-400 font-bold">self-destruct</span> after one print.
-                  </p>
+      <main className="flex-1 flex flex-col items-center justify-center p-6 z-10 pb-20">
+        {!uploadCode && (
+          <div className="text-center max-w-3xl mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold uppercase tracking-wider mb-6 border border-indigo-200">
+               <ShieldCheck className="w-3.5 h-3.5" /> End-to-End Encrypted
+            </div>
+            <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight mb-6">
+              Print your documents <span className="text-indigo-600">securely.</span>
+            </h1>
+            <p className="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto font-normal leading-relaxed">
+              Upload your sensitive files below. We encrypt them with AES-256, generate a one-time secure code, and destroy them immediately after printing at any local partner shop.
+            </p>
+          </div>
+        )}
 
-                  {/* Drop zone */}
-                  <label className="block w-full border-2 border-dashed border-slate-700 bg-slate-800/30 rounded-2xl p-6 text-center cursor-pointer hover:border-emerald-500/50 transition relative overflow-hidden group">
-                    <input type="file" className="hidden" multiple onChange={handleFilesSelected} />
-                    <Upload className="mx-auto mb-3 text-emerald-500 group-hover:scale-110 transition-transform" size={36} />
-                    <p className="text-white font-bold text-sm">Click to select files</p>
-                    <p className="text-slate-500 text-xs mt-1">PDF, JPG, PNG, DOCX — Multiple files allowed</p>
-                  </label>
+        <div className="w-full max-w-xl">
+          <div className="bg-white border border-slate-200 rounded-3xl shadow-xl shadow-slate-200/50 p-8 relative overflow-hidden transition-all duration-500">
+            {/* Top accent */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-indigo-400 to-emerald-400" />
 
-                  {/* File list */}
-                  {files.length > 0 && (
-                    <div className="space-y-3 max-h-72 overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin' }}>
-                      {files.map((entry, i) => (
-                        <div key={i} className="bg-slate-900/60 border border-slate-700 rounded-xl p-3 space-y-2">
-                          {/* File header row */}
-                          <div className="flex items-center gap-2">
-                            <FileText className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm text-white font-medium truncate">{entry.file.name}</p>
-                              <p className="text-xs text-slate-500">{formatSize(entry.file.size)}</p>
-                            </div>
-                            <button onClick={() => removeFile(i)} className="p-1 hover:bg-red-500/20 rounded-lg transition text-slate-500 hover:text-red-400">
-                              <X className="w-4 h-4" />
+            {!uploadCode ? (
+              <div className="space-y-7">
+                {/* Drop zone */}
+                <label className="flex flex-col items-center justify-center w-full h-44 border-2 border-dashed border-slate-300 bg-slate-50 rounded-2xl cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/50 transition-all group outline-none overflow-hidden relative">
+                  <input type="file" className="hidden" multiple onChange={handleFilesSelected} />
+                  <Upload className="w-10 h-10 text-slate-400 mb-3 group-hover:text-indigo-500 transition-colors group-hover:-translate-y-1 duration-300" />
+                  <p className="text-base font-semibold text-slate-700 mb-1">Drag & Drop or Click to Select</p>
+                  <p className="text-sm text-slate-400">Supports PDF, JPG, PNG, DOCX (Max 50MB)</p>
+                </label>
+
+                {/* File List */}
+                {files.length > 0 && (
+                  <div className="space-y-3 max-h-[320px] overflow-y-auto pr-2" style={{scrollbarWidth:'thin'}}>
+                    {files.map((entry, i) => (
+                      <div key={i} className="bg-slate-50 border border-slate-200 rounded-2xl p-4 transition hover:border-indigo-300">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="p-2.5 bg-indigo-100 rounded-lg text-indigo-600">
+                            <FileText className="w-5 h-5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-slate-800 truncate">{entry.file.name}</p>
+                            <p className="text-xs text-slate-400 mt-0.5">{formatSize(entry.file.size)}</p>
+                          </div>
+                          <button onClick={() => removeFile(i)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition" title="Remove file">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <div className="bg-white border border-slate-200 rounded-xl p-3 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold flex items-center gap-1.5 text-slate-600">
+                               {entry.encrypt ? <Lock className="w-3.5 h-3.5 text-indigo-500" /> : <Unlock className="w-3.5 h-3.5 text-slate-400" />}
+                               Server-Side Encryption
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => updateFileOption(i, 'encrypt', !entry.encrypt)}
+                              className={`w-10 h-5.5 rounded-full relative transition duration-300 ${entry.encrypt ? 'bg-indigo-500' : 'bg-slate-300'}`}
+                            >
+                              <span className={`block w-4 h-4 rounded-full bg-white shadow absolute top-0.5 transition-transform duration-300 ${entry.encrypt ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
                             </button>
                           </div>
+                          
+                          <label className="flex items-center gap-2 cursor-pointer pt-2 border-t border-slate-100">
+                            <input
+                              type="checkbox"
+                              className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 transition accent-indigo-600"
+                              checked={entry.isPasswordProtected}
+                              onChange={(e) => updateFileOption(i, 'isPasswordProtected', e.target.checked)}
+                            />
+                            <span className="text-xs font-medium text-slate-600">Has existing PDF password?</span>
+                          </label>
 
-                          {/* Options row */}
-                          <div className="flex flex-col gap-2 pl-6">
-                            {/* Encrypt toggle */}
-                            <label className="flex items-center gap-2 cursor-pointer text-xs">
-                              <button
-                                type="button"
-                                onClick={() => updateFileOption(i, 'encrypt', !entry.encrypt)}
-                                className={`w-8 h-5 rounded-full relative transition-colors ${entry.encrypt ? 'bg-emerald-500' : 'bg-slate-600'}`}
-                              >
-                                <span className={`block w-3.5 h-3.5 bg-white rounded-full absolute top-[3px] transition-transform ${entry.encrypt ? 'translate-x-[14px]' : 'translate-x-[3px]'}`} />
-                              </button>
-                              <span className="text-slate-300 flex items-center gap-1">
-                                {entry.encrypt ? <Lock className="w-3 h-3 text-emerald-400" /> : <Unlock className="w-3 h-3 text-slate-500" />}
-                                {entry.encrypt ? 'Encrypted on server' : 'No encryption'}
-                              </span>
-                            </label>
-
-                            {/* Password protected toggle */}
-                            <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-300">
-                              <input
-                                type="checkbox"
-                                className="w-3.5 h-3.5 rounded border-slate-600 bg-slate-700 text-emerald-500 accent-emerald-500"
-                                checked={entry.isPasswordProtected}
-                                onChange={(e) => updateFileOption(i, 'isPasswordProtected', e.target.checked)}
-                              />
-                              File is already password-protected
-                            </label>
-
-                            {entry.isPasswordProtected && (
-                              <input
-                                type="password"
-                                placeholder="Enter existing file password"
-                                value={entry.password}
-                                onChange={(e) => updateFileOption(i, 'password', e.target.value)}
-                                className="w-full p-2 bg-slate-700 border border-slate-600 rounded-lg outline-none text-white text-xs placeholder-slate-500"
-                              />
-                            )}
-                          </div>
+                          {entry.isPasswordProtected && (
+                            <input
+                              type="password"
+                              placeholder="Enter document password"
+                              value={entry.password}
+                              onChange={(e) => updateFileOption(i, 'password', e.target.value)}
+                              className="w-full mt-1 bg-slate-50 border border-slate-200 px-3 py-2.5 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition"
+                            />
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Comment box */}
-                  <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-sm font-medium text-slate-400">
-                      <MessageSquare className="w-4 h-4" />
-                      Message for the print shop (optional)
-                    </label>
-                    <textarea
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                      placeholder="e.g. Print 2 copies, double-sided, color for page 1..."
-                      rows={3}
-                      className="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl outline-none text-white text-sm placeholder-slate-500 resize-none focus:border-emerald-500/50 transition"
-                    />
-                  </div>
-
-                  <button
-                    onClick={handleUpload}
-                    disabled={files.length === 0 || isUploading}
-                    className="w-full py-4 rounded-2xl text-slate-900 font-bold bg-emerald-500 hover:bg-emerald-400 transition-all shadow-xl shadow-emerald-500/10 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed"
-                  >
-                    {isUploading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : `Upload ${files.length} File${files.length !== 1 ? 's' : ''} Securely`}
-                  </button>
-                  {uploadStatus && !isUploading && <p className="text-xs text-center text-slate-500">{uploadStatus}</p>}
-                </>
-              ) : (
-                <div className="text-center space-y-4">
-                  <p className="font-medium text-emerald-400">{uploadStatus}</p>
-                  <div className="bg-slate-900 p-4 rounded-lg flex items-center justify-between border border-slate-700">
-                    <span className="text-2xl font-mono font-bold tracking-widest text-white">{uploadCode}</span>
-                    <button onClick={copyToClipboard} className="p-2 hover:bg-slate-700 rounded-full transition">{copied ? <Check className="w-5 h-5 text-emerald-500" /> : <Copy className="w-5 h-5 text-slate-400" />}</button>
-                  </div>
-                  <div className="p-4 bg-white rounded-lg inline-block border-4 border-slate-700"><QRCodeCanvas value={downloadUrl} size={160} /></div>
-                  <p className="text-xs text-slate-500">Share this code with the shop owner.</p>
-                  <button onClick={resetUpload} className="text-emerald-500 text-sm hover:underline">Upload more files</button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {printResult === 'success' ? (
-                <div className="flex flex-col items-center justify-center text-center py-4">
-                  <Check className="w-16 h-16 text-emerald-500 bg-emerald-500/10 rounded-full p-4 mb-4" />
-                  <h3 className="text-2xl font-bold text-white mb-2">Print Complete!</h3>
-                  <p className="text-slate-400 text-sm mb-6 px-4">All documents have been sent to the printer and permanently scrubbed from the server.</p>
-                  <button onClick={() => { setPrintResult(null); setDownloadStatus(''); setBatchInfo(null); }} className="w-full py-3 bg-emerald-500 text-slate-900 rounded-lg font-bold">Print Next Batch</button>
-                </div>
-              ) : previewUrl ? (
-                /* ---- File Preview ---- */
-                <div className="space-y-6 flex flex-col items-center">
-                  <button
-                    onClick={() => { setPreviewUrl(''); setSelectedFileIndex(null); setDownloadStatus(''); setIsViewing(false); }}
-                    className="self-start flex items-center gap-1 text-sm text-emerald-500 hover:underline"
-                  >
-                    <ChevronLeft className="w-4 h-4" /> Back to file list
-                  </button>
-
-                  {batchInfo && selectedFileIndex !== null && (
-                    <p className="text-sm text-slate-400">
-                      Previewing: <span className="text-white font-medium">{batchInfo.files[selectedFileIndex]?.name}</span>
-                    </p>
-                  )}
-
-                  <div className="w-full h-[500px] bg-white rounded-lg overflow-hidden border-4 border-slate-700 shadow-inner relative select-none">
-                    {/* Show "Hold to Reveal" only for encrypted files */}
-                    {batchInfo?.files[selectedFileIndex]?.encrypted && !isViewing ? (
-                      <div
-                        className="absolute inset-0 bg-slate-900/95 backdrop-blur-xl flex flex-col items-center justify-center z-40 text-emerald-500 cursor-pointer"
-                        onPointerDown={() => setIsViewing(true)}
-                      >
-                        <Eye className="w-12 h-12 mb-3 text-emerald-500/80" />
-                        <h3 className="text-lg font-bold text-white">Hold to Reveal</h3>
-                        <p className="text-slate-400 text-[10px]">Security active: Hold here to preview document.</p>
                       </div>
-                    ) : isSecureBlanked && batchInfo?.files[selectedFileIndex]?.encrypted ? (
-                      <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center z-50 text-emerald-400">
-                        <ShieldAlert className="w-12 h-12 mb-2" />
-                        <p className="font-bold">PREVIEW LOCKED</p>
-                      </div>
-                    ) : null}
-
-                    <div
-                      className={`w-full h-full transition-opacity duration-75 ${(batchInfo?.files[selectedFileIndex]?.encrypted && (!isViewing || isSecureBlanked)) ? 'opacity-0' : 'opacity-100'}`}
-                      onPointerUp={() => { if (batchInfo?.files[selectedFileIndex]?.encrypted) setIsViewing(false); }}
-                      onPointerLeave={() => { if (batchInfo?.files[selectedFileIndex]?.encrypted) setIsViewing(false); }}
-                    >
-                      {previewContentType.includes('image') ? (
-                        <img src={previewUrl} alt="Preview" className="w-full h-full object-contain pointer-events-none" />
-                      ) : (
-                        <PdfCanvasViewer url={previewUrl} />
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ) : batchInfo ? (
-                /* ---- Batch file list (receive side) ---- */
-                <div className="space-y-4">
-                  <h3 className="text-lg font-bold text-white">📁 {batchInfo.files.length} File{batchInfo.files.length !== 1 ? 's' : ''} Found</h3>
-
-                  {batchInfo.comment && (
-                    <div className="bg-slate-900/60 border border-emerald-500/30 rounded-xl p-3">
-                      <p className="text-xs text-emerald-400 font-bold mb-1 flex items-center gap-1"><MessageSquare className="w-3 h-3" /> Message from sender:</p>
-                      <p className="text-sm text-slate-300">{batchInfo.comment}</p>
-                    </div>
-                  )}
-
-                  <div className="space-y-2 max-h-60 overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin' }}>
-                    {batchInfo.files.map((f) => (
-                      <button
-                        key={f.index}
-                        onClick={() => previewFile(downloadCode, f.index, f.encrypted)}
-                        className="w-full bg-slate-900/60 border border-slate-700 hover:border-emerald-500/50 rounded-xl p-3 flex items-center gap-3 transition text-left group"
-                      >
-                        <FileText className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-white font-medium truncate group-hover:text-emerald-400 transition">{f.name}</p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            {f.encrypted ? (
-                              <span className="text-[10px] px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center gap-1"><Lock className="w-2.5 h-2.5" /> Encrypted</span>
-                            ) : (
-                              <span className="text-[10px] px-1.5 py-0.5 bg-slate-700 text-slate-400 rounded-full flex items-center gap-1"><Unlock className="w-2.5 h-2.5" /> Unencrypted</span>
-                            )}
-                          </div>
-                        </div>
-                        <Eye className="w-4 h-4 text-slate-500 group-hover:text-emerald-400 transition" />
-                      </button>
                     ))}
                   </div>
+                )}
 
-                  <button onClick={handlePrint} disabled={isPrinting} className="w-full py-4 bg-emerald-500 text-slate-900 rounded-2xl font-bold shadow-xl shadow-emerald-500/20">
-                    {isPrinting ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : `Print All ${batchInfo.files.length} File${batchInfo.files.length !== 1 ? 's' : ''} Now`}
-                  </button>
-                  <button onClick={() => { setBatchInfo(null); setDownloadCode(''); setDownloadStatus(''); }} className="text-emerald-500 text-sm hover:underline w-full text-center">Cancel</button>
-
-                  {downloadStatus && <p className="text-xs text-center text-slate-500">{downloadStatus}</p>}
+                {/* Comment */}
+                <div className="space-y-2">
+                   <div className="flex items-center gap-2 pl-1 mb-1">
+                      <MessageSquare className="w-4 h-4 text-indigo-500" />
+                      <span className="text-sm font-semibold text-slate-700">Instructions for Print Shop</span>
+                   </div>
+                   <textarea
+                      value={comment}
+                      onChange={(e) => setComment(e.target.value)}
+                      placeholder="E.g. Print 3 copies, double sided, color ink..."
+                      className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition resize-none h-24"
+                   />
                 </div>
-              ) : (
-                /* ---- Enter code screen ---- */
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-2">Enter File Code</label>
-                    <input
-                      type="text"
-                      value={downloadCode}
-                      onChange={(e) => { setDownloadCode(e.target.value); setPrintResult(null); }}
-                      placeholder="e.g. a1b2c3d4"
-                      className="w-full p-4 bg-slate-700 border border-slate-600 rounded-xl outline-none font-mono text-center text-lg uppercase text-white shadow-inner"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-3">
-                    <button onClick={() => fetchBatchInfo(downloadCode)} disabled={!downloadCode} className="w-full py-4 bg-emerald-500 text-slate-900 rounded-2xl font-bold shadow-xl shadow-emerald-500/10 disabled:bg-slate-700 disabled:text-slate-500">Fetch Documents</button>
-                    <button onClick={() => setShowScanner(!showScanner)} className="w-full py-3 text-slate-400 font-semibold border border-slate-700 rounded-xl hover:bg-slate-700/50 transition">{showScanner ? 'Close Scanner' : 'Scan QR Code'}</button>
-                  </div>
-                  {downloadStatus && <p className="text-xs text-center text-slate-500">{downloadStatus}</p>}
-                </>
-              )}
 
-              {showScanner && !batchInfo && (
-                <div className="mt-4 p-2 bg-white rounded-xl"><QrReader constraints={{ facingMode: 'environment' }} onResult={handleScan} style={{ width: '100%' }} /></div>
-              )}
-            </div>
-          )}
+                <div className="pt-1">
+                    <button
+                      onClick={handleUpload}
+                      disabled={files.length === 0 || isUploading}
+                      className="w-full group inline-flex items-center justify-center px-8 py-4 text-base font-bold text-white transition-all duration-200 rounded-2xl bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/20 hover:shadow-xl hover:shadow-indigo-500/30"
+                    >
+                      {isUploading ? (
+                        <>
+                           <Loader2 className="w-5 h-5 animate-spin mr-3" /> Processing...
+                        </>
+                      ) : (
+                        <>
+                           Secure & Upload {files.length > 0 ? `${files.length} File${files.length > 1 ? 's' : ''}` : ''}
+                           <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                        </>
+                      )}
+                    </button>
+                    {uploadStatus && !isUploading && (
+                      <p className="mt-4 text-center text-sm font-medium text-red-500">{uploadStatus}</p>
+                    )}
+                </div>
+              </div>
+            ) : (
+               <div className="flex flex-col items-center justify-center p-4">
+                  <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mb-6">
+                    <Check className="w-8 h-8 text-emerald-600" />
+                  </div>
+                  <h2 className="text-3xl font-extrabold text-slate-900 mb-2">Ready to Print</h2>
+                  <p className="text-slate-500 text-center mb-8 max-w-xs leading-relaxed">
+                     Provide this code or QR to the print shop operator to retrieve your files.
+                  </p>
+
+                  <div className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-6 mb-8 flex flex-col items-center relative">
+                    <button 
+                      onClick={copyToClipboard}
+                      className="absolute top-4 right-4 p-2 bg-white border border-slate-200 hover:border-indigo-300 rounded-lg transition text-slate-500 hover:text-indigo-600 flex items-center gap-2 shadow-sm"
+                    >
+                      {copied ? <span className="text-xs text-emerald-600 font-bold flex items-center gap-1"><Check className="w-3 h-3"/> Copied</span> : <Copy className="w-4 h-4" />}
+                    </button>
+                    <span className="text-xs uppercase font-bold text-slate-400 tracking-wider mb-2">Secure Code</span>
+                    <span className="text-4xl sm:text-5xl font-mono font-black text-indigo-700 tracking-[0.2em]">{uploadCode}</span>
+                  </div>
+
+                  <div className="p-4 bg-white rounded-2xl shadow-md border border-slate-200 mb-8 transform transition hover:scale-105 duration-300">
+                    <QRCodeCanvas value={downloadUrl} size={180} level={"H"} />
+                  </div>
+
+                  <button 
+                    onClick={resetUpload} 
+                    className="flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-semibold transition bg-indigo-50 hover:bg-indigo-100 px-6 py-3 rounded-xl border border-indigo-200"
+                  >
+                    <Upload className="w-4 h-4" /> Upload more files
+                  </button>
+               </div>
+            )}
+          </div>
+          
+          <div className="mt-8 flex items-center justify-center gap-6 text-sm text-slate-400 font-medium">
+             <div className="flex items-center gap-2"><Lock className="w-4 h-4 text-slate-400" /> AES-256</div>
+             <div className="w-1 h-1 rounded-full bg-slate-300" />
+             <div className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-slate-400" /> Zero Knowledge</div>
+             <div className="w-1 h-1 rounded-full bg-slate-300" />
+             <div className="flex items-center gap-2"><Printer className="w-4 h-4 text-slate-400" /> Auto-Wipe</div>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
