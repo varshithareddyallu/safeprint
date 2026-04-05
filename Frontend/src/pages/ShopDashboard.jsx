@@ -147,7 +147,7 @@ const ShopDashboard = () => {
   const getPricingMultiplier = () => {
     if (!isSurgePricingEnabled || !shop) return { text: 'Base Rate Active', color: 'text-slate-500' };
     switch (shop.status) {
-      case 'free':     return { text: '10% Discount Applied (Attracting Users)', color: 'text-emerald-600' };
+      case 'free':     return { text: '10% Discount Applied (Attracting Users)', color: 'text-indigo-600' };
       case 'moderate': return { text: 'Base Demand Pricing', color: 'text-blue-600' };
       case 'busy':     return { text: '+15% Surge Pricing Active (High Load)', color: 'text-amber-600' };
       case 'closed':   return { text: 'Pricing Frozen', color: 'text-slate-400' };
@@ -157,9 +157,9 @@ const ShopDashboard = () => {
 
   if (!shop) return null;
 
-  const getStatusColor = (s) => ({ free: 'bg-emerald-500', moderate: 'bg-amber-500', busy: 'bg-orange-500', closed: 'bg-red-500' }[s] || 'bg-slate-400');
+  const getStatusColor = (s) => ({ free: 'bg-indigo-500', moderate: 'bg-amber-500', busy: 'bg-orange-500', closed: 'bg-red-500' }[s] || 'bg-slate-400');
   const getStatusBadgeStyle = (s) => ({
-    free:     'bg-emerald-50 text-emerald-700 border-emerald-200',
+    free:     'bg-indigo-50 text-indigo-700 border-indigo-200',
     moderate: 'bg-amber-50 text-amber-700 border-amber-200',
     busy:     'bg-orange-50 text-orange-700 border-orange-200',
     closed:   'bg-red-50 text-red-700 border-red-200',

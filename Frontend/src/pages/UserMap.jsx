@@ -34,7 +34,7 @@ const createIcon = (color) => {
 };
 
 const icons = {
-  free: createIcon('#10b981'), // emerald-500
+  free: createIcon('#4f46e5'), // indigo-600
   moderate: createIcon('#f59e0b'), // amber-500
   busy: createIcon('#f97316'), // orange-500
   closed: createIcon('#ef4444'), // red-500
@@ -91,8 +91,8 @@ const UserMap = () => {
     <div className="h-screen w-full flex flex-col bg-slate-950 font-sans">
       <div className="bg-slate-900 border-b border-slate-800 p-4 flex items-center justify-between z-10">
         <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/')} className="text-white font-bold text-xl hover:text-emerald-400 transition">
-              SafePrint<span className="text-emerald-500">.</span>
+            <button onClick={() => navigate('/')} className="text-white font-bold text-xl hover:text-indigo-400 transition">
+              SafePrint<span className="text-indigo-500">.</span>
             </button>
             <span className="bg-slate-800 text-slate-300 px-3 py-1 rounded-full text-xs ml-4">Nearby Shops</span>
         </div>
@@ -103,7 +103,7 @@ const UserMap = () => {
         <div className="w-80 bg-slate-900 border-r border-slate-800 flex flex-col z-10">
           <div className="p-4 border-b border-slate-800">
             <h2 className="text-white font-bold flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-emerald-500" />
+              <MapPin className="w-4 h-4 text-indigo-500" />
               Available Shops
             </h2>
           </div>
@@ -116,13 +116,13 @@ const UserMap = () => {
               shops.map((shop) => (
                 <div 
                   key={shop.id} 
-                  className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-emerald-500/50 transition-all group cursor-pointer"
+                  className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-indigo-500/50 transition-all group cursor-pointer"
                   onClick={() => setUserLocation(shop.location)}
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-white font-bold text-sm group-hover:text-emerald-400 transition-colors uppercase tracking-tight">{shop.name}</h3>
+                    <h3 className="text-white font-bold text-sm group-hover:text-indigo-400 transition-colors uppercase tracking-tight">{shop.name}</h3>
                     <div className={`w-2 h-2 rounded-full mt-1 ${
-                      shop.status === 'free' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' :
+                      shop.status === 'free' ? 'bg-indigo-500 shadow-[0_0_8px_rgba(79,70,229,0.4)]' :
                       shop.status === 'moderate' ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]' :
                       shop.status === 'busy' ? 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.4)]' :
                       'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]'
@@ -133,14 +133,14 @@ const UserMap = () => {
                   </p>
                   <div className="flex items-center justify-between">
                      <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded border ${
-                        shop.status === 'free' ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' :
+                        shop.status === 'free' ? 'border-indigo-500/30 text-indigo-400 bg-indigo-500/10' :
                         shop.status === 'moderate' ? 'border-amber-500/30 text-amber-400 bg-amber-500/10' :
                         shop.status === 'busy' ? 'border-orange-500/30 text-orange-400 bg-orange-500/10' :
                         'border-red-500/30 text-red-400 bg-red-500/10'
                       }`}>
                         {statusLabels[shop.status]}
                       </span>
-                      <button className="text-emerald-500 text-[10px] font-bold flex items-center gap-1 hover:text-emerald-400 transition-colors">
+                      <button className="text-indigo-500 text-[10px] font-bold flex items-center gap-1 hover:text-indigo-400 transition-colors">
                         View <ChevronRight className="w-3 h-3" />
                       </button>
                   </div>
@@ -167,7 +167,7 @@ const UserMap = () => {
             <RecenterMap location={userLocation} />
 
             {/* User Marker */}
-            <Marker position={userLocation} icon={new L.DivIcon({ className: 'bg-transparent', html: '<div class="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_15px_rgba(59,130,246,0.6)]"></div>', iconSize: [16,16] })}>
+            <Marker position={userLocation} icon={new L.DivIcon({ className: 'bg-transparent', html: '<div class="w-4 h-4 bg-indigo-500 rounded-full border-2 border-white shadow-[0_0_15px_rgba(79,70,229,0.6)]"></div>', iconSize: [16,16] })}>
               <Popup className="custom-popup">You are here</Popup>
             </Marker>
 
@@ -188,7 +188,7 @@ const UserMap = () => {
                       
                       <div className="flex items-center justify-between border-t border-slate-200 pt-3">
                         <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded-md ${
-                          shop.status === 'free' ? 'bg-emerald-100 text-emerald-700' :
+                          shop.status === 'free' ? 'bg-indigo-100 text-indigo-700' :
                           shop.status === 'moderate' ? 'bg-amber-100 text-amber-700' :
                           shop.status === 'busy' ? 'bg-orange-100 text-orange-700' :
                           'bg-red-100 text-red-700'
@@ -210,7 +210,7 @@ const UserMap = () => {
 
           {/* Legend */}
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md px-5 py-3 rounded-2xl border border-slate-700 shadow-2xl z-[1000] flex gap-4">
-            <div className="flex items-center gap-2"><div className="w-3 h-3 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div><span className="text-xs text-slate-300 font-medium whitespace-nowrap">Free</span></div>
+            <div className="flex items-center gap-2"><div className="w-3 h-3 bg-indigo-500 rounded-full shadow-[0_0_8px_rgba(79,70,229,0.5)]"></div><span className="text-xs text-slate-300 font-medium whitespace-nowrap">Free</span></div>
             <div className="flex items-center gap-2"><div className="w-3 h-3 bg-amber-500 rounded-full shadow-[0_0_8px_rgba(245,158,11,0.5)]"></div><span className="text-xs text-slate-300 font-medium whitespace-nowrap">Moderate</span></div>
             <div className="flex items-center gap-2"><div className="w-3 h-3 bg-orange-500 rounded-full shadow-[0_0_8px_rgba(249,115,22,0.5)]"></div><span className="text-xs text-slate-300 font-medium whitespace-nowrap">Busy</span></div>
             <div className="flex items-center gap-2"><div className="w-3 h-3 bg-red-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.5)]"></div><span className="text-xs text-slate-300 font-medium whitespace-nowrap">Closed</span></div>
