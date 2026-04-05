@@ -14,51 +14,139 @@ const uploadDir = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
 
 // In-memory store for file metadata
-const fileStore = {}; // code -> { diskFilename, originalName, key, iv, pdfPassword }
+// code -> { comment, files: [{ diskFilename, originalName, key, iv, pdfPassword, encrypted }] }
+const fileStore = {};
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Upload & Encrypt File (Single)
-router.post('/upload', upload.single('file'), async (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+// Upload & Encrypt Multiple Files
+router.post('/upload', upload.array('files', 20), async (req, res) => {
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({ error: 'No files uploaded' });
+  }
 
   const code = crypto.randomBytes(4).toString('hex');
-  const diskFilename = `${code}-${crypto.randomBytes(8).toString('hex')}${path.extname(req.file.originalname)}`;
-  const filepath = path.join(uploadDir, diskFilename);
 
-  const key = crypto.randomBytes(32);
-  const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
-  const encrypted = Buffer.concat([cipher.update(req.file.buffer), cipher.final()]);
+  // Parse metadata sent as JSON string from frontend
+  let metadata = {};
+  try {
+    metadata = JSON.parse(req.body.metadata || '{}');
+  } catch (e) {
+    return res.status(400).json({ error: 'Invalid metadata format' });
+  }
 
-  fs.writeFileSync(filepath, encrypted);
+  const encryptionPrefs = metadata.encryptionPrefs || []; // [{ encrypt: bool, isPasswordProtected: bool, password: string }]
+  const comment = metadata.comment || '';
 
-  // Store metadata in memory
+  const filesData = [];
+
+  for (let i = 0; i < req.files.length; i++) {
+    const file = req.files[i];
+    const prefs = encryptionPrefs[i] || {};
+    const shouldEncrypt = prefs.encrypt !== false; // Default to true for safety
+    const pdfPassword = prefs.isPasswordProtected ? (prefs.password || null) : null;
+
+    const diskFilename = `${code}-${crypto.randomBytes(8).toString('hex')}${path.extname(file.originalname)}`;
+    const filepath = path.join(uploadDir, diskFilename);
+
+    if (shouldEncrypt) {
+      const key = crypto.randomBytes(32);
+      const iv = crypto.randomBytes(16);
+      const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+      const encrypted = Buffer.concat([cipher.update(file.buffer), cipher.final()]);
+      fs.writeFileSync(filepath, encrypted);
+
+      filesData.push({
+        diskFilename,
+        originalName: file.originalname,
+        key: key.toString('hex'),
+        iv: iv.toString('hex'),
+        pdfPassword,
+        encrypted: true,
+      });
+    } else {
+      // Store file as-is (no AES encryption)
+      fs.writeFileSync(filepath, file.buffer);
+
+      filesData.push({
+        diskFilename,
+        originalName: file.originalname,
+        key: null,
+        iv: null,
+        pdfPassword,
+        encrypted: false,
+      });
+    }
+  }
+
   fileStore[code] = {
-    diskFilename,
-    originalName: req.file.originalname,
-    key: key.toString('hex'),
-    iv: iv.toString('hex'),
-    pdfPassword: req.body.password || null,
+    comment,
+    files: filesData,
   };
+
+  // --- 10 MINUTE AUTO-DELETE TIMER ---
+  setTimeout(() => {
+    if (fileStore[code]) {
+      console.log(`[Auto-Delete] 10 minutes passed. Deleting files for code: ${code}`);
+      const batchData = fileStore[code];
+      
+      // Delete all files on disk
+      batchData.files.forEach(f => {
+        const fp = path.join(uploadDir, f.diskFilename);
+        if (fs.existsSync(fp)) {
+          fs.unlinkSync(fp);
+          console.log(`  -> Deleted: ${f.diskFilename}`);
+        }
+      });
+
+      // Remove from memory
+      delete fileStore[code];
+    }
+  }, 10 * 60 * 1000); // 10 minutes
 
   res.json({ code });
 });
 
-// Stream & Decrypt File for Viewing
-router.get('/download/:code', (req, res) => {
+// Get batch info (file list + comment)
+router.get('/info/:code', (req, res) => {
   const code = req.params.code.toLowerCase();
-  const fileData = fileStore[code];
+  const batch = fileStore[code];
 
-  if (!fileData) {
-    return res.status(404).json({ error: 'Invalid code. File may have been downloaded already.' });
+  if (!batch) {
+    return res.status(404).json({ error: 'Invalid code. Files may have been printed already.' });
   }
 
+  const fileList = batch.files.map((f, i) => ({
+    index: i,
+    name: f.originalName,
+    encrypted: f.encrypted,
+  }));
+
+  res.json({
+    comment: batch.comment,
+    files: fileList,
+  });
+});
+
+// Stream & Decrypt individual file for Viewing
+router.get('/download/:code/:index', (req, res) => {
+  const code = req.params.code.toLowerCase();
+  const index = parseInt(req.params.index, 10);
+  const batch = fileStore[code];
+
+  if (!batch) {
+    return res.status(404).json({ error: 'Invalid code. Files may have been printed already.' });
+  }
+
+  if (isNaN(index) || index < 0 || index >= batch.files.length) {
+    return res.status(400).json({ error: 'Invalid file index.' });
+  }
+
+  const fileData = batch.files[index];
   const filepath = path.join(uploadDir, fileData.diskFilename);
 
   if (!fs.existsSync(filepath)) {
-    delete fileStore[code];
     return res.status(404).json({ error: 'File not found on server.' });
   }
 
@@ -69,84 +157,169 @@ router.get('/download/:code', (req, res) => {
     'Cache-Control': 'no-store, no-cache, must-revalidate, private'
   });
 
-  if (fileData.pdfPassword && mimeType === 'application/pdf') {
-    // Needs to remove PDF password for preview
-    const encrypted = fs.readFileSync(filepath);
-    const decipherSync = crypto.createDecipheriv('aes-256-cbc', Buffer.from(fileData.key, 'hex'), Buffer.from(fileData.iv, 'hex'));
-    const decrypted = Buffer.concat([decipherSync.update(encrypted), decipherSync.final()]);
-    
-    const tmpFile = path.join(os.tmpdir(), `safeprint_prev_${code}.pdf`);
-    const unencryptedFile = path.join(os.tmpdir(), `safeprint_prev_open_${code}.pdf`);
-    
-    fs.writeFileSync(tmpFile, decrypted);
-    
-    try {
+  if (fileData.encrypted) {
+    // Decrypt AES first
+    const encryptedBuf = fs.readFileSync(filepath);
+    const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(fileData.key, 'hex'), Buffer.from(fileData.iv, 'hex'));
+    const decrypted = Buffer.concat([decipher.update(encryptedBuf), decipher.final()]);
+
+    if (fileData.pdfPassword && mimeType === 'application/pdf') {
+      const tmpFile = path.join(os.tmpdir(), `safeprint_prev_${code}_${index}.pdf`);
+      const unencryptedFile = path.join(os.tmpdir(), `safeprint_prev_open_${code}_${index}.pdf`);
+      fs.writeFileSync(tmpFile, decrypted);
+
+      try {
         muhammara.recrypt(tmpFile, unencryptedFile, { password: fileData.pdfPassword });
         fs.unlinkSync(tmpFile);
-        
+
         const readStream = fs.createReadStream(unencryptedFile);
         readStream.on('error', (err) => {
-            console.error('File read stream error:', err);
-            if (!res.headersSent) res.status(500).send('Error reading file.');
+          console.error('File read stream error:', err);
+          if (!res.headersSent) res.status(500).send('Error reading file.');
         });
         readStream.on('close', () => {
-            if (fs.existsSync(unencryptedFile)) fs.unlinkSync(unencryptedFile);
+          if (fs.existsSync(unencryptedFile)) fs.unlinkSync(unencryptedFile);
         });
         readStream.pipe(res);
         return;
-    } catch (err) {
+      } catch (err) {
         console.error('Failed to decrypt PDF preview with provided password:', err);
         if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
         if (fs.existsSync(unencryptedFile)) fs.unlinkSync(unencryptedFile);
         if (!res.headersSent) res.status(500).send('Error decrypting PDF preview. Incorrect password?');
         return;
+      }
     }
-  }
 
-  // Normal stream
-  const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(fileData.key, 'hex'), Buffer.from(fileData.iv, 'hex'));
-  const readStream = fs.createReadStream(filepath);
-  readStream.pipe(decipher).pipe(res);
-});
+    // Return decrypted buffer
+    res.send(decrypted);
+  } else {
+    // Not AES-encrypted — handle PDF password if present
+    if (fileData.pdfPassword && mimeType === 'application/pdf') {
+      const tmpFile = path.join(os.tmpdir(), `safeprint_prev_${code}_${index}.pdf`);
+      const unencryptedFile = path.join(os.tmpdir(), `safeprint_prev_open_${code}_${index}.pdf`);
+      
+      fs.copyFileSync(filepath, tmpFile);
 
-// Direct Print
-router.post('/print/:code', async (req, res) => {
-  const code = req.params.code.toLowerCase();
-  const fileData = fileStore[code];
-
-  if (!fileData) return res.status(404).json({ error: 'Invalid code' });
-
-  const filepath = path.join(uploadDir, fileData.diskFilename);
-  const encrypted = fs.readFileSync(filepath);
-  const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(fileData.key, 'hex'), Buffer.from(fileData.iv, 'hex'));
-  const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
-
-  const ext = path.extname(fileData.originalName) || '.pdf';
-  let tmpFile = path.join(os.tmpdir(), `safeprint_${code}${ext}`);
-  fs.writeFileSync(tmpFile, decrypted);
-
-  if (fileData.pdfPassword && ext.toLowerCase() === '.pdf') {
-    const unencryptedFile = path.join(os.tmpdir(), `safeprint_open_${code}${ext}`);
-    try {
+      try {
         muhammara.recrypt(tmpFile, unencryptedFile, { password: fileData.pdfPassword });
         fs.unlinkSync(tmpFile);
-        tmpFile = unencryptedFile;
-    } catch (err) {
-        console.error('Failed to decrypt PDF with provided password:', err);
+
+        const readStream = fs.createReadStream(unencryptedFile);
+        readStream.on('error', (err) => {
+          console.error('File read stream error:', err);
+          if (!res.headersSent) res.status(500).send('Error reading file.');
+        });
+        readStream.on('close', () => {
+          if (fs.existsSync(unencryptedFile)) fs.unlinkSync(unencryptedFile);
+        });
+        readStream.pipe(res);
+        return;
+      } catch (err) {
+        console.error('Failed to decrypt PDF preview with provided password:', err);
         if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
-        return res.status(400).json({ error: 'Incorrect PDF password or unable to decrypt.' });
+        if (fs.existsSync(unencryptedFile)) fs.unlinkSync(unencryptedFile);
+        if (!res.headersSent) res.status(500).send('Error decrypting PDF preview. Incorrect password?');
+        return;
+      }
     }
+
+    // Normal stream (no encryption, no pdf password)
+    const readStream = fs.createReadStream(filepath);
+    readStream.pipe(res);
+  }
+});
+
+// Keep backward compat: /download/:code redirects to first file
+router.get('/download/:code', (req, res) => {
+  const code = req.params.code.toLowerCase();
+  const batch = fileStore[code];
+
+  if (!batch) {
+    return res.status(404).json({ error: 'Invalid code. Files may have been printed already.' });
   }
 
+  // Redirect to first file
+  res.redirect(`/api/files/download/${code}/0`);
+});
+
+// Print all files in batch
+router.post('/print/:code', async (req, res) => {
+  const code = req.params.code.toLowerCase();
+  const batch = fileStore[code];
+
+  if (!batch) return res.status(404).json({ error: 'Invalid code' });
+
+  const tmpFiles = [];
+
   try {
-    await ptp.print(tmpFile);
-    if (fs.existsSync(filepath)) fs.unlinkSync(filepath);
-    if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
+    for (let i = 0; i < batch.files.length; i++) {
+      const fileData = batch.files[i];
+      const filepath = path.join(uploadDir, fileData.diskFilename);
+
+      if (!fs.existsSync(filepath)) continue;
+
+      let fileBuffer;
+      if (fileData.encrypted) {
+        const encryptedBuf = fs.readFileSync(filepath);
+        const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(fileData.key, 'hex'), Buffer.from(fileData.iv, 'hex'));
+        fileBuffer = Buffer.concat([decipher.update(encryptedBuf), decipher.final()]);
+      } else {
+        fileBuffer = fs.readFileSync(filepath);
+      }
+
+      const ext = path.extname(fileData.originalName) || '.pdf';
+      let tmpFile = path.join(os.tmpdir(), `safeprint_${code}_${i}${ext}`);
+      fs.writeFileSync(tmpFile, fileBuffer);
+
+      if (fileData.pdfPassword && ext.toLowerCase() === '.pdf') {
+        const unencryptedFile = path.join(os.tmpdir(), `safeprint_open_${code}_${i}${ext}`);
+        try {
+          muhammara.recrypt(tmpFile, unencryptedFile, { password: fileData.pdfPassword });
+          fs.unlinkSync(tmpFile);
+          tmpFile = unencryptedFile;
+        } catch (err) {
+          console.error(`Failed to decrypt PDF ${i} with provided password:`, err);
+          if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
+          continue;
+        }
+      }
+
+      tmpFiles.push({ tmpFile, filepath });
+    }
+
+    // Print all files
+    for (const { tmpFile } of tmpFiles) {
+      await ptp.print(tmpFile);
+    }
+
+    // Cleanup: delete all encrypted + tmp files
+    for (const { tmpFile, filepath } of tmpFiles) {
+      if (fs.existsSync(filepath)) {
+        fs.unlinkSync(filepath);
+        console.log(`Deleted uploaded file: ${filepath}`);
+      }
+      if (fs.existsSync(tmpFile)) {
+        fs.unlinkSync(tmpFile);
+        console.log(`Deleted temporary file: ${tmpFile}`);
+      }
+    }
+
+    // Also delete any files that were skipped (not found)
+    for (const fileData of batch.files) {
+      const fp = path.join(uploadDir, fileData.diskFilename);
+      if (fs.existsSync(fp)) fs.unlinkSync(fp);
+    }
+
     delete fileStore[code];
-    return res.json({ success: true, message: 'Document sent to printer successfully.' });
+    console.log(`Removed batch metadata for code: ${code}`);
+    return res.json({ success: true, message: `${tmpFiles.length} document(s) sent to printer successfully.` });
   } catch (err) {
     console.error('Print error:', err);
-    if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
+    // Cleanup tmp files on error
+    for (const { tmpFile } of tmpFiles) {
+      if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
+    }
     return res.status(503).json({ error: 'Failed to send to printer.' });
   }
 });

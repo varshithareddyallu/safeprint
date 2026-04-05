@@ -15,13 +15,21 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
 
-// Custom Icons for different statuses
+// Custom Icons for different statuses (Using a Printer SVG icon)
 const createIcon = (color) => {
   return new L.DivIcon({
     className: 'bg-transparent',
-    html: `<div style="background-color: ${color}; width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5);"></div>`,
-    iconSize: [24, 24],
-    iconAnchor: [12, 12]
+    html: `
+      <div style="background-color: white; width: 36px; height: 36px; border-radius: 50%; border: 3px solid ${color}; box-shadow: 0 4px 10px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+           <path d="M6 9V2h12v7"></path>
+           <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+           <path d="M6 14h12v8H6z"></path>
+        </svg>
+      </div>
+    `,
+    iconSize: [36, 36],
+    iconAnchor: [18, 18]
   });
 };
 
@@ -42,7 +50,7 @@ const statusLabels = {
 const RecenterMap = ({ location }) => {
   const map = useMap();
   useEffect(() => {
-    map.setView(location, 14);
+    map.setView(location, 16); // Closer initial zoom
   }, [location, map]);
   return null;
 };
@@ -146,13 +154,15 @@ const UserMap = () => {
         <div className="flex-1 relative">
           <MapContainer 
             center={userLocation} 
-            zoom={14} 
+            zoom={16} 
+            maxZoom={19}
             className="w-full h-full z-0" 
             style={{ background: '#020617' }}
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
               url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              maxZoom={19}
             />
             <RecenterMap location={userLocation} />
 
@@ -165,17 +175,24 @@ const UserMap = () => {
             {shops.map((shop) => (
               <Marker key={shop.id} position={shop.location} icon={icons[shop.status] || icons['free']}>
                 <Popup className="custom-popup">
-                  <div className="p-1">
-                    <h3 className="font-bold text-base text-slate-900 mb-1">{shop.name}</h3>
-                    <p className="text-xs text-slate-500 mb-3">{shop.address}</p>
-                    
-                    <div className="flex items-center justify-between border-t border-slate-200 pt-3">
-                      <span className={`text-xs font-bold px-2 py-1 rounded-md ${
-                        shop.status === 'free' ? 'bg-emerald-100 text-emerald-700' :
-                        shop.status === 'moderate' ? 'bg-amber-100 text-amber-700' :
-                        shop.status === 'busy' ? 'bg-orange-100 text-orange-700' :
-                        'bg-red-100 text-red-700'
-                      }`}>
+                  <div className="p-0 flex flex-col w-48">
+                    {/* Realistic Print Shop Image Image */}
+                    <img 
+                      src={`https://images.unsplash.com/photo-1598440947619-2ce1be41ce0e?auto=format&fit=crop&q=80&w=400&h=200`} 
+                      alt="Shop" 
+                      className="w-full h-24 object-cover rounded-t-md border-b"
+                    />
+                    <div className="p-3">
+                      <h3 className="font-bold text-base text-slate-900 mb-0.5 leading-tight">{shop.name}</h3>
+                      <p className="text-xs text-slate-500 mb-3">{shop.address}</p>
+                      
+                      <div className="flex items-center justify-between border-t border-slate-200 pt-3">
+                        <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded-md ${
+                          shop.status === 'free' ? 'bg-emerald-100 text-emerald-700' :
+                          shop.status === 'moderate' ? 'bg-amber-100 text-amber-700' :
+                          shop.status === 'busy' ? 'bg-orange-100 text-orange-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
                         {statusLabels[shop.status]}
                       </span>
                       {shop.status !== 'closed' && (
@@ -185,6 +202,7 @@ const UserMap = () => {
                       )}
                     </div>
                   </div>
+                 </div>
                 </Popup>
               </Marker>
             ))}
