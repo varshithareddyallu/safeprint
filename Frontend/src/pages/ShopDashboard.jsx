@@ -127,7 +127,7 @@ const ShopDashboard = () => {
              <h1 className="text-3xl font-extrabold text-white mb-2 flex items-center gap-2">Command Center</h1>
              <p className="text-slate-400">AI-optimized operations & live shop management.</p>
            </div>
-           <button onClick={() => navigate('/print')} className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-bold py-3 px-6 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.3)] transition flex items-center gap-2">
+           <button onClick={() => navigate('/business/print')} className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-bold py-3 px-6 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.3)] transition flex items-center gap-2">
              <Printer size={18} /> Open Print Receiver
            </button>
         </div>

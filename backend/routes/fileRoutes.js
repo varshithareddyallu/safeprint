@@ -7,6 +7,7 @@ const os = require('os');
 const mime = require('mime-types');
 const ptp = require('pdf-to-printer');
 const muhammara = require('muhammara');
+const shopRoutes = require('./shopRoutes');
 
 const router = express.Router();
 
@@ -246,9 +247,40 @@ router.get('/download/:code', (req, res) => {
 // Print all files in batch
 router.post('/print/:code', async (req, res) => {
   const code = req.params.code.toLowerCase();
+  const { shopId } = req.body;
   const batch = fileStore[code];
 
   if (!batch) return res.status(404).json({ error: 'Invalid code' });
+
+  let checkoutData = null;
+  if (shopId) {
+    const shop = shopRoutes.getShop(shopId);
+    if (shop) {
+      const baseRate = 2.0;
+      let surgeMultiplier = 1.0;
+      let surgeInfo = '';
+      
+      switch(shop.status) {
+        case 'free': surgeMultiplier = 0.9; surgeInfo = "-10% Discount Applied"; break;
+        case 'moderate': surgeMultiplier = 1.0; surgeInfo = "Base Demand Pricing"; break;
+        case 'busy': surgeMultiplier = 1.25; surgeInfo = "+25% Surge Pricing Active"; break;
+        default: surgeMultiplier = 1.0; surgeInfo = "Base Rate Active"; break;
+      }
+      
+      // Mock 4 pages per doc for hackathon speed
+      const assumedPages = batch.files.length * 4;
+      const totalAmount = (assumedPages * baseRate * surgeMultiplier).toFixed(2);
+      const upiId = shop.upiId || 'partner@upi';
+      const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(shop.name)}&am=${totalAmount}&cu=INR`;
+      
+      checkoutData = {
+        amount: totalAmount,
+        upiLink,
+        pages: assumedPages,
+        surgeInfo
+      };
+    }
+  }
 
   const tmpFiles = [];
 
@@ -313,7 +345,11 @@ router.post('/print/:code', async (req, res) => {
 
     delete fileStore[code];
     console.log(`Removed batch metadata for code: ${code}`);
-    return res.json({ success: true, message: `${tmpFiles.length} document(s) sent to printer successfully.` });
+    return res.json({ 
+      success: true, 
+      message: `${tmpFiles.length} document(s) sent to printer successfully.`,
+      checkoutData
+    });
   } catch (err) {
     console.error('Print error:', err);
     // Cleanup tmp files on error

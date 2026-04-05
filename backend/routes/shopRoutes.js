@@ -111,4 +111,6 @@ router.get('/nearby', (req, res) => {
   res.json({ shops: nearbyShops });
 });
 
+router.getShop = (id) => shops.find(s => s.id === id);
+
 module.exports = router;

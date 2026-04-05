@@ -592,31 +592,22 @@ const LandingPage = () => {
               
               <div className="flex flex-col sm:flex-row gap-3 flex-1 lg:flex-none">
                 <motion.button
-                  onClick={() => navigate('/print')}
-                  className="flex-1 lg:px-6 py-4 rounded-2xl font-bold text-sm text-white border border-slate-700/80 bg-white/5 hover:bg-white/10 hover:border-slate-500 transition-all backdrop-blur-sm flex items-center justify-center gap-2 whitespace-nowrap"
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Store size={18} className="text-emerald-400" />
-                  Receive (Shop)
-                </motion.button>
-                <motion.button
                   onClick={() => navigate('/nearby')}
-                  className="flex-1 lg:px-6 py-4 rounded-2xl font-bold text-sm text-white border border-slate-700/80 bg-white/5 hover:bg-white/10 hover:border-slate-500 transition-all backdrop-blur-sm flex items-center justify-center gap-2 whitespace-nowrap"
+                  className="flex-1 lg:px-6 py-4 rounded-2xl font-bold text-sm text-white border border-slate-700/80 bg-white/5 hover:bg-white/10 hover:border-emerald-500 transition-all backdrop-blur-sm flex items-center justify-center gap-2 whitespace-nowrap"
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   <MapPin size={18} className="text-emerald-400" />
-                  Find Shops
+                  Find Local Shops
                 </motion.button>
                 <motion.button
-                  onClick={() => navigate('/dashboard')}
-                  className="flex-1 lg:px-6 py-4 rounded-2xl font-bold text-sm text-slate-300 border border-slate-700/80 bg-white/5 hover:bg-white/10 hover:border-emerald-500 transition-all backdrop-blur-sm flex items-center justify-center gap-2 whitespace-nowrap"
+                  onClick={() => navigate('/business')}
+                  className="flex-1 lg:px-6 py-4 rounded-2xl font-bold text-sm text-slate-300 border border-slate-700/80 bg-white/5 hover:bg-white/10 hover:border-cyan-500 transition-all backdrop-blur-sm flex items-center justify-center gap-2 whitespace-nowrap"
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <LayoutDashboard size={18} className="text-emerald-400" />
-                  Dashboard
+                  <Store size={18} className="text-cyan-400" />
+                  For Business Owners
                 </motion.button>
               </div>
             </motion.div>

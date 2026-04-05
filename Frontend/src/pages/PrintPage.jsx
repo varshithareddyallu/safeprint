@@ -41,23 +41,24 @@ const PrintPage = () => {
       setIsPrinting(true);
       setPrintResult(null);
       setStatus('Sending all files to printer...');
-      await axios.post(`${API_BASE_URL}/print/${code}`);
       
-      // --- Dynamic Payment Calculation (Mock) ---
-      const baseRate = 2.0; // ₹2.00 per page base
-      const surgeMultiplier = 1.15; // API or Shop rule: +15% Surge
-      const assumedPages = batchInfo.files.length * 4; // Mocking 4 pages per doc for demo
-      const totalAmount = (assumedPages * baseRate * surgeMultiplier).toFixed(2);
-      
-      const upiId = "partner@upi"; // Should come from Shop Owner's settings in a real app
-      const upiLink = `upi://pay?pa=${upiId}&pn=SafePrint%20Partner&am=${totalAmount}&cu=INR`;
+      const shopSessionStr = localStorage.getItem('safeprint_shop_session');
+      const shopSession = shopSessionStr ? JSON.parse(shopSessionStr) : null;
+      const shopId = shopSession ? shopSession.id : 'mock-shop-123'; // fallback for demo
 
-      setCheckoutData({
-        amount: totalAmount,
-        upiLink: upiLink,
-        pages: assumedPages,
-        surgeInfo: "+15% AI Surge Applied"
-      });
+      const response = await axios.post(`${API_BASE_URL}/print/${code}`, { shopId });
+      
+      if (response.data.checkoutData) {
+        setCheckoutData(response.data.checkoutData);
+      } else {
+        // Fallback safety
+        setCheckoutData({
+          amount: "0.00",
+          upiLink: "upi://pay?pa=partner@upi",
+          pages: 0,
+          surgeInfo: "Legacy Calculation"
+        });
+      }
 
       setStatus('✅ Documents sent to printer. Awaiting customer payment.');
       setPrintResult('success');
