@@ -1,3 +1,5 @@
-export const API_BASE_URL = window.location.hostname === 'localhost' 
-  ? 'http://localhost:5000/api/files' 
-  : 'https://safeprint-backend.onrender.com/api/files';
+export const SERVER_URL = window.location.hostname === 'localhost' 
+  ? 'http://localhost:5000' 
+  : 'https://safeprint-backend.onrender.com';
+
+export const API_BASE_URL = `${SERVER_URL}/api/files`;

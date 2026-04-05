@@ -6,6 +6,7 @@ const path = require('path');
 const os = require('os');
 const mime = require('mime-types');
 const ptp = require('pdf-to-printer');
+const muhammara = require('muhammara');
 
 const router = express.Router();
 
@@ -13,12 +14,12 @@ const uploadDir = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
 
 // In-memory store for file metadata
-const fileStore = {}; // code -> { diskFilename, originalName, key, iv }
+const fileStore = {}; // code -> { diskFilename, originalName, key, iv, pdfPassword }
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Upload & Encrypt File
+// Upload & Encrypt File (Single)
 router.post('/upload', upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
@@ -33,12 +34,13 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 
   fs.writeFileSync(filepath, encrypted);
 
-  // Store metadata in memory instead of separate .key file
+  // Store metadata in memory
   fileStore[code] = {
     diskFilename,
     originalName: req.file.originalname,
     key: key.toString('hex'),
     iv: iv.toString('hex'),
+    pdfPassword: req.body.password || null,
   };
 
   res.json({ code });
@@ -57,95 +59,95 @@ router.get('/download/:code', (req, res) => {
 
   if (!fs.existsSync(filepath)) {
     delete fileStore[code];
-    return res.status(404).json({ error: 'File not found on server. It may have been downloaded already.' });
+    return res.status(404).json({ error: 'File not found on server.' });
   }
 
   const mimeType = mime.lookup(fileData.originalName) || 'application/octet-stream';
-  console.log(`Attempting to stream file '${fileData.originalName}' with MIME type '${mimeType}'`);
-
-  const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(fileData.key, 'hex'), Buffer.from(fileData.iv, 'hex'));
-
-  // IMPORTANT: If the browser does not have a viewer for the `mimeType`,
-  // it will fall back to downloading the file, even with "Content-Disposition: inline".
-  // A type of `application/octet-stream` will almost always trigger a download.
   res.set({
     'Content-Type': mimeType,
     'Content-Disposition': `inline; filename="${fileData.originalName}"`,
     'Cache-Control': 'no-store, no-cache, must-revalidate, private'
   });
 
+  if (fileData.pdfPassword && mimeType === 'application/pdf') {
+    // Needs to remove PDF password for preview
+    const encrypted = fs.readFileSync(filepath);
+    const decipherSync = crypto.createDecipheriv('aes-256-cbc', Buffer.from(fileData.key, 'hex'), Buffer.from(fileData.iv, 'hex'));
+    const decrypted = Buffer.concat([decipherSync.update(encrypted), decipherSync.final()]);
+    
+    const tmpFile = path.join(os.tmpdir(), `safeprint_prev_${code}.pdf`);
+    const unencryptedFile = path.join(os.tmpdir(), `safeprint_prev_open_${code}.pdf`);
+    
+    fs.writeFileSync(tmpFile, decrypted);
+    
+    try {
+        muhammara.recrypt(tmpFile, unencryptedFile, { password: fileData.pdfPassword });
+        fs.unlinkSync(tmpFile);
+        
+        const readStream = fs.createReadStream(unencryptedFile);
+        readStream.on('error', (err) => {
+            console.error('File read stream error:', err);
+            if (!res.headersSent) res.status(500).send('Error reading file.');
+        });
+        readStream.on('close', () => {
+            if (fs.existsSync(unencryptedFile)) fs.unlinkSync(unencryptedFile);
+        });
+        readStream.pipe(res);
+        return;
+    } catch (err) {
+        console.error('Failed to decrypt PDF preview with provided password:', err);
+        if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
+        if (fs.existsSync(unencryptedFile)) fs.unlinkSync(unencryptedFile);
+        if (!res.headersSent) res.status(500).send('Error decrypting PDF preview. Incorrect password?');
+        return;
+    }
+  }
+
+  // Normal stream
+  const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(fileData.key, 'hex'), Buffer.from(fileData.iv, 'hex'));
   const readStream = fs.createReadStream(filepath);
-
-  // Add error handling to prevent crashes and leaving dangling files.
-  readStream.on('error', (err) => {
-    console.error('File read stream error:', err);
-    if (!res.headersSent) {
-      res.status(500).send('Error reading file from server.');
-    }
-  });
-
-  decipher.on('error', (err) => {
-    console.error('Decryption stream error:', err);
-    if (!res.headersSent) {
-      res.status(500).send('Error decrypting file. It may be corrupt.');
-    }
-  });
-
   readStream.pipe(decipher).pipe(res);
 });
 
-
-// Direct Print — PDF never sent to browser
+// Direct Print
 router.post('/print/:code', async (req, res) => {
   const code = req.params.code.toLowerCase();
   const fileData = fileStore[code];
 
-  if (!fileData) {
-    return res.status(404).json({ error: 'Invalid code. File may have already been printed or deleted.' });
-  }
+  if (!fileData) return res.status(404).json({ error: 'Invalid code' });
 
   const filepath = path.join(uploadDir, fileData.diskFilename);
-
-  if (!fs.existsSync(filepath)) {
-    delete fileStore[code];
-    return res.status(404).json({ error: 'File not found on server.' });
-  }
-
-  // Decrypt in memory
   const encrypted = fs.readFileSync(filepath);
-  const decipher = crypto.createDecipheriv(
-    'aes-256-cbc',
-    Buffer.from(fileData.key, 'hex'),
-    Buffer.from(fileData.iv, 'hex')
-  );
+  const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(fileData.key, 'hex'), Buffer.from(fileData.iv, 'hex'));
   const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
 
-  // Write to a temp file so pdf-to-printer can access it
   const ext = path.extname(fileData.originalName) || '.pdf';
-  const tmpFile = path.join(os.tmpdir(), `safeprint_${code}${ext}`);
+  let tmpFile = path.join(os.tmpdir(), `safeprint_${code}${ext}`);
   fs.writeFileSync(tmpFile, decrypted);
 
-  try {
-    // Check if any printers are available
-    const printers = await ptp.getPrinters();
-    if (!printers || printers.length === 0) {
-      if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
-      return res.status(503).json({ error: 'No printer connected. Please connect a printer and try again.' });
+  if (fileData.pdfPassword && ext.toLowerCase() === '.pdf') {
+    const unencryptedFile = path.join(os.tmpdir(), `safeprint_open_${code}${ext}`);
+    try {
+        muhammara.recrypt(tmpFile, unencryptedFile, { password: fileData.pdfPassword });
+        fs.unlinkSync(tmpFile);
+        tmpFile = unencryptedFile;
+    } catch (err) {
+        console.error('Failed to decrypt PDF with provided password:', err);
+        if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
+        return res.status(400).json({ error: 'Incorrect PDF password or unable to decrypt.' });
     }
+  }
 
-    // Send to default printer
+  try {
     await ptp.print(tmpFile);
-
-    // DELETE original and record ONLY on success/handoff
     if (fs.existsSync(filepath)) fs.unlinkSync(filepath);
     if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
     delete fileStore[code];
-
-    return res.json({ success: true, message: 'Document sent to printer successfully and deleted from server.' });
+    return res.json({ success: true, message: 'Document sent to printer successfully.' });
   } catch (err) {
     console.error('Print error:', err);
     if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
-    return res.status(503).json({ error: 'Failed to send to printer. Make sure a printer is connected and set as default.' });
+    return res.status(503).json({ error: 'Failed to send to printer.' });
   }
 });
 
